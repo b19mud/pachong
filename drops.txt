@@ -1,0 +1,1818 @@
+推荐入门书籍：
+Java jdk 7学习笔记——学习java语言语法
+疯狂Android讲义第二版——学习android sdk相关内容
+本来想自己写一写关于XXE攻击的文章，碰巧今天在微博上看见TSRC贴出来的这个文章了。。我就不自己写了。。
+http://security.tencent.com/index.php/blog/msg/69
+但是这只有普通的XXE，下面给个Blind XXE的实例。
+http://www.wooyun.org/bugs/wooyun-2010-074069
+<0x1>
+四种重要的编码：
+1. HTML实体编码 ：&#数值; 数值指的是对应字符的十进制或者十六进制的ASCII码或者unicode字符编码
+HTML命名实体 ：命名表查询 （针对特殊字符）
+2. JAVASCRIPT编码 ：\数值  数值指<1.三个八进制数值\145><2.二个十六进制数字\x64><3.四个十六进制数字\u0064><4.转义字符\n,\r>
+上述数值不足位数补0
+3. CSS编码 ：\数值 数值指1-6位十六进制数字
+4. URL编码 ： %数值 数值是指对应的ASCII码
+<0x2>
+编码在什么情况下会被解码？
+在文本节点或者参数值会被解码。
+文本节点： <ohfuck>此处为文本节点</ohfuck>
+参数 ： <img src="这里是参数"/>
+<0x3>
+浏览器是如何逐步解码的？
+一个例子：<img src=# onerror="eval(<?php echo $_GET['x']; ?>)">
+获取的X参数首先是在URL中被接受，然后到一个javascript中，然后再是在一个HTML标签里，那他实际的解码过程会是怎样呢？
+第一步，先获取x参数，例如我们接受到的是 %26%2397%3B%26%23108%3Bert('\x68\x65\x6c\x6c\x6f')
+可能有人会糊涂了，这到底是个什么屌东西，慢慢来：
+浏览器首先对你输入的那串参数 %26%2397%3B%26%23108%3Bert('\x68\x65\x6c\x6c\x6f') 进行一次URL解码，然后就变成了：
+&#97;&#108;ert('\x68\x65\x6c\x6c\x6f')
+第二步，由于输入的东西是在一个HTML标签里的javascript中，解码时候，HTML标签先是老大，所以浏览器再进行一次HTML解码：
+alert('\x68\x65\x6c\x6c\x6f')
+这时候，只剩下javascript这个小弟了，浏览器进行JS解码:
+alert('hello')
+最后渲染出来就是：<img src=# onerror="eval(alert('hello'))">
+第二个例子：<div id='here'></div><script>document.getElementById('here').innerHTML= "."'".htmlspecialchars($_GET['x'])."'".";</script>
+在这里获取的x参数被htmlspecialchars编码了，所以当x为 <img src=#> 时候，经过一轮htmlspecialchars函数的转换，是不会执行里面的HTML代码的，因为已经面目全非了。
+如果我们使x为 \x3c\x69\x6d\x67\x20\x73\x72\x63\x3d\x23\x3e (<img src=#>的JS编码)会发生什么？
+首先 在这里，x参数在URL中被接受并编码，然后由javascript控制输出到HTML中，那么在这里对于HTML来说JS就是老大，所以浏览器会在PHP的htmlspecialchars函数过后（由于没有HTML特殊字符，不会有什么变化）先JS解码，就成了<img src=#>，然后输出，因为htmlspecialchars在JS解码之前，所以输出<img src=#>就畅通无阻了。
+<0x4>
+关于innerHtml： 有经验的同学肯定发现很多情况下innerHtml并不会执行类似<script>alert()</script>的代码(IE <script defer="defer"> 除外 )这是浏览器避免产生混乱的一种做法。
+XSS安全编码工具： http://app.baidu.com/app/enter?appid=280383
+我感觉这人的XSS系列真心不错，从简单的入门逐步深入面面聚到。
+http://www.freebuf.com/articles/web/40520.html 第一弹
+http://www.freebuf.com/articles/web/42727.html 第二弹
+http://www.freebuf.com/articles/44481.html     第三弹
+http://www.freebuf.com/articles/web/43285.html 番外篇（编码）
+https://github.com/LightIce/RemoteCode
+https://github.com/LightIce/RemoteCode-Android
+https://github.com/LightIce/RemoteCode-WEB
+XSS 前端防火墙 —— 内联事件拦截
+http://fex.baidu.com/blog/2014/06/xss-frontend-firewall-1/
+XSS 前端防火墙 —— 可疑模块拦截
+http://fex.baidu.com/blog/2014/06/xss-frontend-firewall-2/
+XSS 前端防火墙 —— 无懈可击的钩子
+http://fex.baidu.com/blog/2014/06/xss-frontend-firewall-3/
+XSS 前端防火墙 —— 天衣无缝的防护
+http://fex.baidu.com/blog/2014/06/xss-frontend-firewall-4/
+XSS 前端防火墙 —— 整装待发
+http://fex.baidu.com/blog/2014/06/xss-frontend-firewall-5/
+http://www.flyingmonkeyarmy.com/page/home/
+WIN MAC LINUX全有，哦耶。
+1.完成冒泡排序算法。
+2.自己编写一个函数，参数为一维数组，并对传入的数组进行排序。
+HINT：如果不知道如何下手，请学习HTTP中数据的传输方式。
+HINT2：HTTP 请求方法
+HINT3：这样的提示你们都做不来，好吧最后给一次提示。
+请阅读http://www.w3school.com.cn/tags/html_ref_httpmethods.asp
+如果不理解上文中的内容，请自行百度解决。理解以后请尝试进行GET请求，然后想办法发送POST请求，有很多方法可以发送POST请求，自己写代码实现，js，C，等等，还可以使用工具，请自己想办法解决。
+这个题目的目的是让大家了解GET与POST请求的区别，以及分别是什么。当大家明白二者分别是什么后，请尝试寻找发送POST和GET的方法，可以自己写代码实现，也可以用工具实现，甚至浏览器插件。重点是GET和POST的区别以及作用，还有发送这两个请求的方法，请大家不要为了做作业而做作业。
+preHint:首先……你得了解函数指针……？
+Hint:如果觉得很简单，请想想printf和scanf·-·如果C没问题的话，C++呢……？
+（极力奉劝使用支持最新标准的编译器）
+百度云地址：http://pan.baidu.com/s/1qWJjZp6
+提取密码：rxnw
+reverse1.0.ppt
+Hack or be hacked.pptx
+Art Of Using A Search Engine ←连提纲都没有……也就是加深下印象
+官网地址：http://dctf.defcamp.ro/
+比赛时间：time: 10.18 20:00 - 10.20 20:00
+这次是第一次组织协会集体参加CTF比赛，有兴趣的童鞋加油哦~
+协会的战队帐号会在核心群里通知，如果没看到的小伙伴请联系lightless。
+链接: http://pan.baidu.com/s/1AjiDw
+密码: 5j9u
+Oct. 21, 2014 08:00 — Oct. 23, 08:00 UTC 2d 0h
+http://2014.hack.lu/index.php/CaptureTheFlag
+网络部作业：完成后请发送至542243844@qq.com
+1.了解TCP/IP网络参考模型
+2.安装wireshark
+渗透作业1：
+培训时候的PHP文件，搭建环境，体验一下XSS吧
+链接: http://pan.baidu.com/s/1gdnE6ND 密码: 3oc2
+附上渗透小游戏 http://canyouhack.it/Hacking-Challenges/Web-Based-Challenges
+比赛时间：2014-11-1 08:00:00 - 2014-11-2 20:00:00
+官方地址：http://ctf.sobug.com/ruler.php
+不过看到微博上有人说
+PHP
+利用反序列化以后的执行回调来调用函数，不过这样貌似在.htaccess中写不了有用的代码。
+有想法的可以回下。
+原文link
+https://github.com/sektioneins/pcc/wiki/PHP-htaccess-injection-cheat-sheet
+http://pan.baidu.com/s/1qW4rrw4
+u395
+https://9447.plumbing/
+感兴趣的同学注意一下哦~
+队伍名：HDUISA
+登陆时请使用lightless@foxmail.com进行登陆
+Nov. 29, 2014 11:00 — Nov. 30, 23:00 UTC 1d 12h
+RE_for_beginners-en
+http://yunpan.cn/csISNNwCEgSMN  提取码 20d7
+逆向资料
+《汇编语言》 王爽
+PPT：http://yunpan.cn/cAjvewNzB6NkS  提取码 22bd
+安卓资料
+《Java编程思想》
+《Java核心技术》
+《第一行代码 Android》
+PPT: http://pan.baidu.com/s/1dDcnIaX 密码: merb
+windows资料
+PPT：http://yunpan.cn/cAjve7T7eUbpy  提取码 4f7c
+《windows程序设计》
+《windows核心编程》
+最近在看安卓安全啊，于是搞了一大波的安卓安全的书籍，慢慢放出来。
+http://yunpan.cn/cArBDazwUsLTR  提取码 6f1f
+小伙子们最近更新都不积极啊。。。再发一本Android安全的书。。
+http://yunpan.cn/cAeVpuKN54GQI  提取码 c3c5
+很多人都说不知道学什么，本人不才，粗略整理了一下。
+图中并非是全部的学习内容，只是一个学习方向，大家可以参考一下，如果有错误的地方请大家提出来，我会及时改正。
+渗透部分
+
+逆向部分 and 小部分Windows
+
+内功修炼：
+《JavaScript DOM 编程艺术 》第二版
+《JavaScript 权威指南 第六版》（带大犀牛的）
+《Unix/Linux编程实践教程》
+《HTTP权威指南》
+《Web前端黑客技术揭秘》
+《Web之困》
+《21天学通C++》（书名比较烂但是写的真的很好）
+以下是业余读物：
+《线上幽灵：世界头号黑客米特尼克自传》
+《社会工程》
+《兰德报告》（老黑客推荐）
+《浪潮之巅》
+各大知名社区里面出现的书都不错，我发现好的会实时更新
+通过此链接注册，可获得10美元，可免费使用2个月的vps！！
+https://www.digitalocean.com/?refcode=69b3a002d522
+第一题
+查看网页源码，发现这么一大坨，一下就能想到data协议解BASE64把图片解出来。
+![week11.png][1]
+把两个图片MD5后进行对比发现MD5不一样，就说明图片不一样，但是用图片题神器异或发现两幅图像素是一样的，那么查看EXIF发现也是一样的，然后用diff命令对比两个图片。发现下图的东西。
+![week12.png][2]
+开始还以为是IP什么的，但是数字都比128小，所以ASCII码解出来，然后脑洞一开，把它填到URL上，拿下一血。
+图片变成MD5的python脚本
+![week13.png][3]
+第二题
+不断刷新红框框里的东西会变的.
+![week21.png][4]
+把他们拼接在一起，R2V0IFJlc3BvbnNlIEZyb20gaGR1aXNhLmNu，然后BASE64解密,
+Get Response From hduisa.cn 出现这个提示。
+关键在于这篇文章
+http://drops.wooyun.org/tips/750
+根据文章 把URL改成http://drops.hduisa.cn@hduisa.cn
+但是我做的时候还有个坑http://drops.hduisa.cn@hduisa.cn
+会长开的是火狐浏览器还要加个反斜杠。
+我交完他把这个改了直接加@就行了
+第三题
+有个小提示MQ==
+意思是提交的东西要用BASE64编码一下，开始脑洞开错了。
+根据提示，把GET提交形式改成POST,
+用户名admin BASE64编码后提交
+密码 ' || 1=1# 因为过滤了OR 所以把OR 换成 ||
+[1]: http://hduisa.qiniudn.com/2015/01/3273796800.png
+[2]: http://hduisa.qiniudn.com/2015/01/1786201317.png
+[3]: http://hduisa.qiniudn.com/2015/01/708174426.png
+[4]: http://hduisa.qiniudn.com/2015/01/2419397184.png
+第一篇是一个快速查找注入语句的小整理，方便自己手注的时候用吧，但是有些关键字是可以替换的，为了绕WAF嘛。。
+http://lightless.me/archives/MySQL-Injection-Quick-Reference.html
+接下来就是关于LIMIT注入的研究了。。
+http://lightless.me/archives/111.html
+WEEK2的Limit注入的Writeup这里也发一份吧
+http://lightless.me/archives/Limit-Injection-Writeup.html
+链接：http://pan.baidu.com/s/1c0rlkGS 密码：4mqg
+一套视频教程，还不错。
+链接：http://pan.baidu.com/s/1jGgjBlO 密码：vkkq
+我也没看过。。。
+以后本站不提供下载了，因为版权问题。leym
+大家可以自行搜索电子版或购买纸质版。/s/1hqov8ry
+一本讲bash shell的书，刚刚看完，感觉讲的比较一般，最后关于bash和msfcli一起使用的部分可以仔细读一下。
+由于版权原因，本站不提供下载地址s/1pTLcM
+请大家自行百度搜索链接cwwx
+此书算是比较优秀的flask学习入门,作者是社区很有名的开发者
+这本书是一个朋友购买Kindle版本然后转码分享的
+版权原因,不提供下载服务链接:1c02bV4c
+a1wy
+一个链接：
+ALICTF2015_Top30_Writeup.zip
+脑洞大开……
+睡了一觉起来之后很快想到如下序列：
+lea xxx,yyy
+mov ptr[zzz],xxx
+转而在sendMail和上层main中找：
+一道栈溢出的题目。
+###step1：
+nc连接上去之后是3个选项。其中1，2都有字符串的输入。先丢ida分析。
+根据一些字符串的输出理清函数的调用关系。先按照提示尝试step1.
+前面还有个不限长度的gets函数，所以是只要输入字符串覆盖就可以了。
+构造字符串'a'*(0x94-0x0D) + 0x5c(就是字符'\')
+手工输入得到flag：__hctf{*hidden*:)}__
+分析step2的程序流程，首先输入密码。密码为明文很容易发现为"=L=why_dont_you_guess_me?"输入正确后提示输入验证码，为109然后就结束了。
+随后我再查找.const段发现字符串"flags/step2"，猜想使用这个参数调用step1中打印flag的函数，但是两个输入函数都是限制了输入长度的，所以没有办法进行栈溢出攻击。
+*****************************************************************
+Step2.Things get complicated, you'll need some professional tricks.Try your best!
+You need to give me a password to read the flag.
+*****************************************************************
+Oh..And,I need to check if you are human beings.
+Please calculate:二十三 plus 0x56 = ?
+*****************************************************************
+passwd:
+your answer:109
+Yes,you are able to do some reverse engineering,but here is not the way to get flag.
+flag: hctf{*hidden*:)}
+by program author:
+step2 是仿照sctf2014 pwn200的思路写的，做了简化，一开始程序逻辑还有些问题，比如可以直接用step1的gets来打step2啦，长度限制根本没起到迷惑性的作用啦等等，还是被做出来之后经过交流才知道的orz
+看过writeup之后更感觉肯定不只是一两天功力，未来大腿get√
+http://cli.learncodethehardway.org/bash_cheat_sheet.pdf
+备份存档：
+bash_cheat_sheet.pdf
+唯一一本能把Nginx的配置、模块开发、架构原理讲明白的国产书。
+对于开发高效的TCP服务器也有极大的参考价值。
+
+豆瓣链接：http://book.douban.com/subject/22793675/
+下载链接：http://pan.baidu.com/s/1nt87i57 密码: wguq
+作者博客：http://taohui.org.cn/
+最简单最舒服，覆盖的基本知识面也比较完整的一本书。
+Linux开发入门必看
+豆瓣链接：http://book.douban.com/subject/1219329/
+
+下载链接: http://pan.baidu.com/s/1i3CdgLR 密码: 6936
+入门必读：beej.us
+虽然暂时只有英文版，但是是入门最快，内容最精炼，讲到了网络编程最基本很重要的几个问题。
+PS：请务必克服英文老大难！十分值得你克服英文难的一本小教程！
+进阶必读：Unix网络编程第一卷
+讲到了Unix网络编程一些主要的话题。由于年代久远，有些做法不再流行或是不再适用于当前的生产环境。（TODO：等待我再审阅过给个具体部分）
+使用方式：不要强迫自己从前往后看，不要在细节上过分纠结
+下载链接: http://pan.baidu.com/s/1ntGERbj 密码: sryv
+深入钻研必读：TCP/IP详解第一版第一卷
+使用方式：值得初学者从前往后看。同样注意跳过年代久远的内容（TODO：等待我再审阅过给个具体部分）
+下载链接：http://pan.baidu.com/s/1dDF9pYx 密码: pjij
+参考资料：TCP/IP详解第二版第一卷 （暂无电子版）
+讲了很多时下流行的网络内容，尤其是NAT部分（内外网映射的关联部分）（TODO：等待我再审阅过给个具体部分），作为总的参考书和补充阅读。
+文章请移步：
+http://lightless.me/archives/Zend-Extension-PHP-WAF.html
+aHR0cHM6Ly90aGVpbml0aXVtLmNvbS9hcnRpY2xlLzIwMTUwOTA0LW1haW5sYW5kLWdyZWF0ZmlyZXdhbGwv
+自备梯子。
+http://python.jobbole.com/82163/
+http://python.jobbole.com/82167/
+http://python.jobbole.com/82171/
+http://python.jobbole.com/82178/
+今日在群里看到某些学弟po出来问问题的代码实在是惨不忍睹，不得不吐槽一番。虽然是C语言的初学者，但是我认为即便是初学者也应该注意代码格式已经命名规则之类的东西。
+主要是有几点原因，一是如果不及时养成良好的习惯，以后就改不过来了。二是为了代码的可读性以及可维护性，不过目前的十几行代码并没啥可读性而言。我们假设，你编写了一个计算器的程序，大概几百上千行代码，如果所有的变量都是aa，bb，cc，x，y，z这种命名，第二天保准你记不得每个变量是干啥的。另外，糟糕的缩进和花括号也会让你痛不欲生，所以，尽量在刚开始学习写代码的时候养成良好的习惯。
+又叫骆驼命名法，指使用大小写来混合命名。
+例如userProfile。把每个单词的首字母大写，而第一个单词不大写，像驼峰一样，故得名。
+再给几个例子：myStudentCount，uploadFile等。
+如果第一个单词大写，则称为大驼峰，否则为小驼峰。例如：MyStudentCount和UploadFile均为大驼峰。
+这个比较随意，指用下划线分割每个单词。例如
+user_profile，my_student_count，upload_file等。
+匈牙利命名法的核心是，在变量名前加上该变量类型的缩写，使其他人看到变量名可以明白该变量是什么类型。例如：
+string sUserProfile;
+int iMyStudentCount;
+File hUploadFile;
+接下来是缩进的问题，通常情况下C语言的缩进都是4个字符，也是被大多数人接受的宽度。
+如果确定是4个宽度了，那么不要在代码中出现没有对齐的情况了。
+多说一句，不管for和if后面有几行代码，请加上花括号，不要吝啬你的花括号。下面给个比较好一定的代码格式，大家自己领悟吧。
+仔细看，for和if的花括号是在同一行，而函数main的花括号换行了，这是另一种编码风格，即函数，代码块等表示一个类似于module的时候，花括号换行。而当你表达一个过程的时候，例如for和if这种语句块，则不换行。
+两种风格对于C来说，我偏向前者，但是如果代码写多了，你可能会喜欢第二种了。建议初学者还是采用第一种方法，不要轻易尝试第二种。
+代码中不要吝惜你的注释，但是也不要每一句话都要写注释。
+注释应当对一些函数、关键代码段给出概要性的说明，让阅读者明白此处的代码是作何用途，或是变量代表什么。举个例子，当然这里是反例，不要学习：
+没啥好说的，你多写写代码，就算每天写100行代码，一个月下来，你也会养成自己的代码风格。没有人一开始写代码就是漂亮的，但是你要强迫自己去写出漂亮的代码（当然代码必须有意义），时间久了，自然能写出看起来比较爽的代码。
+等以后熟练了，可以多看看别人的代码，看看其他大公司的编码规范，例如google等等。
+如何优雅的写c语言
+传送门
+一切皆数据
+传送门
+代码范例
+传送门
+hit:
+比如，在浏览器的输入www.baidu.com后，从按下回车到浏览器显示出百度页面这期间，发生了什么？可以百度，google，不过最后的报告我要看到你用自己的语言进行总结。
+1. 如何优雅的fxxk GFW？
+* 没记住就算了。。自己互相问问。
+* 根据相关政策以及法律法规，该条目禁止显示
+2. 如何优雅的收集信息和新闻？
+* feedly / bluereader
+* weibo
+* twitter
+* 聚合网站，部分已经收录在我的feedly列表中
+* 大牛的博客-> 例如 seay 和 phith0n
+3. 入门WEB开发书单
+* HTML -> W3SCHOOL
+* JS -> 《JS权威指南》 犀牛书 -> 《JS高级编程》
+* PHP -> 《PHP和MySQL Web开发(原书第4版)》
+* 以上学到什么程度已经讲过了，这里不重复了，没记住的互相问问。
+4. 安全入门书单
+* 黑客大曝光 第7版
+* 前端黑客
+* 白帽子讲web安全
+* SQL注入攻击与防御
+* XSS跨站脚本攻击剖析与防御
+* （有难度）web之困
+5. 测试网站及资源
+* sqli labs
+* dvwa
+* wechall
+* 善用搜索引擎
+西电做的，好屌啊。。。
+站点导图
+上面的web版思维导图是用D3.js做的
+D3.js
+就几个题目，做出来就算完成作业了。
+其中涉及的知识自己通过google学习。
+学渗透必做
+https://www.wechall.net/challenge/training/encodings/url/index.php
+https://www.wechall.net/challenge/training/encodings/ascii/index.php
+知识点：URL编码，ASCII编码。
+进阶编码的题目：
+https://www.wechall.net/challenge/training/encodings1/index.php
+知识点：依然是编码
+趣味题目
+https://www.wechall.net/challenge/training/prime_factory/index.php
+知识点：完全可以搜索到（不是直接搜索到答案）
+培训资料
+WIKI网络入门部分
+傻乎乎的网络入门
+作业：私聊发给370990553
+1.TCP三次握手四次挥手全过程
+2.了解DNS协议流程
+有一个学习资料：
+隐写术
+这一题被编译器强行的增加了难度。我调用的strlen函数被编译器直接写在了main函数里。而且这个strlen函数为了优化写的十分风骚。造成不小的麻烦。
+本来这个程序只是一个亦或再加上一个映射。结果强行的增加难度。
+然后放出本周日穿所有题的大神spine的writeup:
+链接: http://pan.baidu.com/s/1hrsEydI 密码: gk3i
+Python爬虫开发（一）：零基础入门
+Python爬虫开发（二）：整站爬虫与Web挖掘
+Python爬虫开发（三）：数据存储以及多线程
+Python爬虫开发（四）：动态加载页面的解决方案与爬虫代理
+Python爬虫开发（五）：反爬虫措施以及爬虫编写注意事项
+http://blog.techorganic.com/2015/04/10/64-bit-linux-stack-smashing-tutorial-part-1/
+http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/
+http://blog.techorganic.com/2016/03/18/64-bit-linux-stack-smashing-tutorial-part-3/
+http://drops.wooyun.org/tips/7883
+http://blog.phdays.com/2014/07/review-of-waf-bypass-tasks.html
+Mastering Wireless Penetration Testing for Highly-Secured Environments
+Wi-Fi Security
+Kali Linux: Wireless Penetration Testing Beginner’s Guide
+Maximum Wireless Security
+Hacking Exposed Wireless: Wireless Security Secrets
+WarDriving and Wireless Penetration Testing
+Wireless Hacking Projects for Wi-Fi Enthusiasts
+Wi-Foo: The Secrets of Wireless Hacking 1  – 2nd Edition
+Hacking Wireless Networks – The ultimate hands-on guide
+Aircrack-ng
+WPS-SLAUGHTER
+Wepcrack
+Wifite
+What-Pro
+Kismet
+hostapd
+nosecleaner
+Pyrit
+WiFi-Pumpkin
+cowpatty
+wifiphisher
+Reaver
+fluxion
+FruityWi-Fi
+WPA2-HalfHandshake-Crack
+Fern-Wifi-Cracker
+Dumpper
+Infernal-Wireless
+cenarius
+mdk3
+Wifi_Trojans
+PwnSTAR
+T2-packetspammer
+Ghost Phisher
+Pyxiewps
+Pixiewps
+subterfuge
+Wraith
+Mana Toolkit
+Sızma Testlerinde Kablosuz Ağlar Ve Atak Vektörleri
+Kablosuz Ağlar Hakkında (Besim ALTINOK)
+Wireless
+Cracking WPA/WPA2
+corelan.be – Wireless Cracking
+Github – Kablosuz Ağlar
+Online Courses:
+WiFi Wireless Security Tutorial
+SecurityTube
+Ultimate Wi Fi Hacking & Security Series (udemy)
+Learn Wi-fi Hacking/Penetration Testing From Scratch (udemy)
+Development:
+Libraries:
+winpcap
+pcapy
+scapy (Python)
+Hardware:
+Hak5 Products
+HackRFBlue
+Ettus Products
+Reaver
+Cheat Sheets :
+Uceka
+IEEE 802.11 Cheatsheet
+点线面，一个安全人员的漏洞世界
+http://pstatic.geekbang.org/pdf/571ae1c3d37ec.pdf?e=1461832480&token=eHNJKRTldoRsUX0uCP9M3icEhpbyh3VF9Nrk5UPM:0CDREzuUXjohAd5JVMcW8qK-A3I=
+“安全”开发之“坑无止境”
+http://pstatic.geekbang.org/pdf/571ae26173993.pdf?e=1461832478&token=eHNJKRTldoRsUX0uCP9M3icEhpbyh3VF9Nrk5UPM:3jKj70ZIt-CB8EPxPw99nnuehXw=
+百鬼夜行の看不见的无线安全
+http://pstatic.geekbang.org/pdf/571b1979c75a1.pdf?e=1461832456&token=eHNJKRTldoRsUX0uCP9M3icEhpbyh3VF9Nrk5UPM:molEI0wQh4G0ukd49oeGuWIQ3VM=
+原本丢掉的跨站漏洞 – JavaScript 特性利用
+http://blog.knownsec.com/2016/04/javascript_characteristic_utilization_xss/
+渗透实验故事：从CSV到CMD到qwerty
+http://www.freebuf.com/vuls/102790.html
+Adventures in Windows Driver Development: Part 1
+https://www.nccgroup.trust/uk/about-us/newsroom-and-events/blogs/2016/april/adventures-in-windows-driver-development-part-1/
+Linux Assembly Tutorial
+Step-by-Step Guide
+http://docs.cs.up.ac.za/programming/asm/derick_tut/
+Cookie前缀如何让Cookie更安全？
+http://www.freebuf.com/articles/web/103089.html
+pentest&misc部分
+http://lorexxar.cn/2016/05/09/sctf2016/#more
+** code部分 **
+http://lazysheep.cc/2016/05/10/0x1B/
+盲注可以转为注入，但是要求windows+root权限跑mysql
+有一个免费的平台
+http://ceye.io
+作者分享的好东西
+http://pan.baidu.com/s/1jIPhlJo  7iu8
+http://www.pyinstaller.org/
+pyinstaller简洁教程 http://legendtkl.com/2015/11/06/pyinstaller/
+PHP-vulnerability-audit-cheatsheet
+https://github.com/dustyfresh/PHP-vulnerability-audit-cheatsheet
+黑客入侵物理隔离网络的一些经典案例
+http://bobao.360.cn/learning/detail/3000.html
+HOP:HTTP代理服务器，可以让任意协议走HTTP隧道
+https://github.com/sakshamsharma/HTTP-Over-Protocol
+http://www.cnblogs.com/coco1s/p/5777260.html
+【前端安全】JavaScript防http劫持与XSS
+http://bobao.360.cn/learning/detail/2997.html
+【技术分享】CSV/XLS Injection Vulnerability 分析利用和YY
+Hunter Tip #1 Response To Request Injection (RTRI)
+https://www.bugbountyhq.com/front/latestnews/dWRWR0thQ2ZWOFN5cTE1cXQrSFZmUT09/
+https://imlonghao.com/45.html
+DN42 - 一个大型的 VPN 网络
+http://mp.weixin.qq.com/s?__biz=MjM5OTk2MTMxOQ==&mid=2727827297&idx=1&sn=277c0178ebead359392018be205020ad&scene=1
+京东代码安全审计平台第一期建设思路
+https://www.ohlinge.cn/ctf/bctf001.html
+“百度杯”CTF Writeup 第一期
+https://forum.90sec.org/forum.php?mod=viewthread&tid=9863
+CTF中一些利用PS解决的杂项题（Misc）
+http://www.kitploit.com/2016/09/codewarrior-just-another-manual-code.html
+GITHUB：https://github.com/CoolerVoid/codewarrior/
+Content Security Policy 入门教程
+http://www.ruanyifeng.com/blog/2016/09/csp.html
+XSS found on www.google.fr
+http://seclists.org/fulldisclosure/2016/Sep/25
+CVE-2016-6662 - MySQL Remote Root Code Execution / Privilege Escalation ( 0day )
+http://seclists.org/fulldisclosure/2016/Sep/23
+[oss-security] CVE request - Airmail URLScheme render and file:// xss vulnerability
+http://seclists.org/fulldisclosure/2016/Sep/21
+Practical Memory Checking With Dr. Memory
+http://www.securitygossip.com/blog/2016/09/12/2016-09-12/
+移动APP漏洞自动化检测平台建设
+https://security.tencent.com/index.php/blog/msg/109
+Mysql代码执行漏洞，可本地提权（含exp，9/13 01点更新）
+http://bobao.360.cn/learning/detail/3025.html
+你真的会代码审计吗？
+https://zhuanlan.zhihu.com/p/22417081
+浅谈JSP安全开发之SQL注入
+http://bbs.ichunqiu.com/thread-9958-1-1.html?from=sec
+SugarCRM 6.5.23 - REST PHP Object Injection漏洞分析
+http://bobao.360.cn/learning/detail/3020.html
+kali的所有命令行命令使用列表
+https://www.cybrary.it/0p3n/kali-linux-commands-list/
+socks4 reverse proxy for penetration testing
+https://github.com/artkond/rpivot
+使用不信任的字节码逃逸LUA 5.2沙盒
+https://apocrypha.numin.it/talks/lua_bytecode_exploitation.pdf
+后渗透攻防的信息收集
+https://www.secpulse.com/archives/51527.html
+part1
+http://blog.brakmic.com/intro-to-x86-assembly-with-fasm/
+part2
+http://blog.brakmic.com/intro-to-x86-assembly-with-fasm-part-2/
+绕过CDN查找网站真实IP
+http://xiaix.me/rao-guo-cdncha-zhao-wang-zhan-zhen-shi-ip/
+价值1w6美刀的Facebooe页面接管漏洞
+http://www.mottoin.com/89391.html
+MYSQL远程代码执行／权限提升漏洞的分析与实践（CVE-2016-6662）
+http://avfisher.win/archives/593
+Linux下一些配置文件的研究
+http://www.00100011f.cc/157/
+TheFatRat：Msfvenom免杀后门生成工具
+http://www.mottoin.com/89403.html
+Files Your Webserver Shouldn’t Deliver
+https://www.insinuator.net/2016/09/files-your-webserver-shouldnt-deliver/
+Blind Java Deserialization Vulnerability - Commons Gadgets
+https://deadcode.me/blog/2016/09/02/Blind-Java-Deserialization-Commons-Gadgets.html
+Blind Java Deserialization - Part II - exploitation rev 2
+https://deadcode.me/blog/2016/09/18/Blind-Java-Deserialization-Part-II.html
+Blender: Self-randomizing Address Space Layout for Android Apps
+http://www.securitygossip.com/blog/2016/09/20/2016-09-20/
+浅谈风控领域中的用户画像
+http://mp.weixin.qq.com/s?__biz=MzAxNTk5ODcxOQ==&mid=2247484589&idx=1&sn=56a095bcc307f77d2a00b76a121ac872&scene=1&srcid=0920CSLeXWr545QnJA3MxetK#rd
+Rails动态模板路径的风险
+http://www.mottoin.com/89466.html
+webshell通信检测
+http://bug.cool/2016/webshell%E9%80%9A%E4%BF%A1%E6%A3%80%E6%B5%8B/
+前后端分离架构下CSRF防御机制
+http://feclub.cn/post/content/koa-grace-csrf
+从CVE-2014-9707看unlink漏洞利用
+http://bobao.360.cn/learning/detail/3043.html
+Windows域横向渗透
+http://www.mottoin.com/89413.html
+CSAW QUALS 2016的所有关卡的writeup
+https://github.com/isislab/CSAW-CTF-2016-Quals
+https://github.com/ernw/ctf-writeups/tree/master/csaw2016
+A collected list of awesome security talks
+https://github.com/PaulSec/awesome-sec-talks
+逆向分析EXTRABACON——针对思科ASA防火墙的大杀器
+http://bobao.360.cn/learning/detail/3044.html
+Metasploit 反序列化漏洞，可远程非授权执行代码
+http://bobao.360.cn/learning/detail/3047.html
+Apple OSX IOThunderboltFamily 提权
+http://www.zerodayinitiative.com/advisories/ZDI-16-522
+Apple OS X AppleHSSPIHIDDriver 内存溢出提权
+http://www.zerodayinitiative.com/advisories/ZDI-16-521
+ZineBasic远程文件泄露
+https://cxsecurity.com/issue/WLB-2016090144
+WordPress Neosense主题 shell上传漏洞
+https://cxsecurity.com/issue/WLB-2016090143
+CVE-2016-6415 思科 IKEv1漏洞影响多个产品
+http://bestsecuritysearch.com/vulnerability-ikev1-cisco-products
+Hunting for Vulnerabilities in Signal – Part 3
+https://cybermashup.com/2016/09/21/hunting-for-vulnerabilities-in-signal-part-3/
+Micro-Virtualization Memory Tracing to Detect and Prevent Spraying Attacks
+http://www.securitygossip.com/blog/2016/09/21/2016-09-21/
+Android App常见安全问题演练分析系统-DIVA-Part1
+http://bobao.360.cn/learning/detail/3048.html
+Safari's URL redirection XSS - CVE-2016-4585
+http://www.mbsd.jp/blog/20160921_2.html
+Flask源码学习之意外在Debugger上发现通用XSS
+http://blog.neargle.com/2016/09/21/flask-src-review-get-a-xss-from-debuger/
+WinPirate - Automated Sticky Keys Hack. Post Exploitation It Grabs Browser Passwords, History, And Network Passwords
+http://www.kitploit.com/2016/09/winpirate-automated-sticky-keys-hack.html
+Ponce:IDA 符号执行辅助插件
+https://research.trust.salesforce.com/Introducing-Ponce-One-click-symbolic-execution
+Monero的CSRF漏洞
+https://labs.mwrinfosecurity.com/advisories/csrf-vulnerability-allows-for-remote-compromise-of-monero-wallets/
+android应用APP常见安全问题
+http://blog.csdn.net/qq_29277155/article/details/52627148
+Veil-Evasion：基于Python的免杀Payload生成工具
+http://www.mottoin.com/89616.html
+解剖一次真正的 Linux 入侵（第一部分）︰ 运行SSH MiTM 蜜罐
+http://bobao.360.cn/learning/detail/3051.html
+揭开思科ASA防火墙网络军火的面纱
+http://bobao.360.cn/learning/detail/3053.html
+逆向路由器固件之动态调试
+http://xdxd.love/2016/09/20/%E9%80%86%E5%90%91%E8%B7%AF%E7%94%B1%E5%99%A8%E5%9B%BA%E4%BB%B6%E4%B9%8B%E5%8A%A8%E6%80%81%E8%B0%83%E8%AF%95/
+Prefetch Side-Channel Attacks: Bypassing SMAP and Kernel ASLR
+https://gruss.cc/files/prefetch.pdf
+MORE HACKING SQL SERVERS WITHOUT A PASSWORD
+https://blog.anitian.com/hacking-sql-servers-without-password/
+weevely3后门分析
+https://forum.90sec.org/forum.php?mod=viewthread&tid=9936
+Drupal 8 配置文件下载漏洞分析
+http://paper.seebug.org/50/
+SSRF Tips
+http://0cx.cc/some_tips_with_sssrf.jspx
+漏洞组合拳 – 攻击分布式节点
+http://www.mottoin.com/89644.html
+Windows 10没有文档化的证书特性
+http://hexatomium.github.io/2016/09/24/hidden-w10-pins/
+iOS 10安全弱点，容易破解备份的密码
+http://blog.elcomsoft.com/2016/09/ios-10-security-weakness-discovered-backup-passwords-much-easier-to-break/
+iPhone7 越狱
+https://www.schneier.com/blog/archives/2016/09/iphone_7_jailbr.html
+记一下PythonWeb代码审计应该注意的地方
+http://blog.neargle.com/2016/07/25/log-of-simple-code-review-about-python-base-webapp/
+redis利用姿势收集
+http://www.webshell.cc/5154.html
+Reversing GO binaries like a pro
+http://rednaga.io/2016/09/21/reversing_go_binaries_like_a_pro/
+ProxyDroid：Android全局代理应用
+http://www.mottoin.com/89774.html
+通过non-interactive shell转发请求到内网
+http://www.mottoin.com/89743.html
+XSS puzzler
+https://medium.com/@eoftedal/xss-puzzler-622f6f86c277#.hjw03u4cj
+CVE-2016-4758: UXSS in Safari's showModalDialog
+http://mksben.l0.cm/2016/09/safari-uxss-showModalDialog.html
+Docker 容器逃逸案例分析
+https://yq.aliyun.com/articles/57803
+【代码审计初探】Beescms v4.0_R SQL注入
+https://www.ohlinge.cn/php/beescms_sqli.html
+Various public documents, whitepapers and articles about APT campaigns
+https://github.com/kbandla/APTnotes
+Symbolic Execution just one-click away!
+https://github.com/illera88/Ponce
+An Analysis of the Privacy and Security Risks of Android VPN Permission-enabled Apps
+http://www.securitygossip.com/blog/2016/09/26/2016-09-26/
+【分享】移动安全资源wiki
+http://bbs.pediy.com/showthread.php?t=212927
+WEB UYGULAMA GÜVENLİĞİ VE GÜVENLİ KOD GELİŞTİRME
+https://www.exploit-db.com/docs/40424.pdf
+【技术分享】CTF中RSA的常见攻击方法
+http://bobao.360.cn/learning/detail/3058.html
+【技术分享】从开发角度浅谈CSRF攻击及防御
+http://bobao.360.cn/learning/detail/3061.html
+【技术分享】解剖一次真正的 Linux 入侵（第二部分）︰ OpenSSH的木马病毒工具
+http://bobao.360.cn/learning/detail/3052.html
+CSRF protection bypass on any Django powered site via Google Analytics
+https://hackerone.com/reports/26647
+What You Didn't Know About XML External Entities Attacks
+http://2013.appsecusa.org/2013/wp-content/uploads/2013/12/WhatYouDidntKnowAboutXXEAttacks.pdf
+Mybatis框架下SQL注入漏洞面面观
+http://mp.weixin.qq.com/s?__biz=MjM5OTk2MTMxOQ==&mid=2727827368&idx=1&sn=765d0835f0069b5145523c31e8229850&mpshare=1&scene=1&srcid=0926iDLkz6CKTO9IUh5fqt3o#rd
+Reshaping web defenses with strict Content Security Policy
+http://security.googleblog.com/2016/09/reshaping-web-defenses-with-strict.html
+【原创】Androrat源码分析
+http://bbs.pediy.com/showthread.php?t=212951
+MySQL 主从详解
+http://www.lookingss.org/index.php/archives/3.html
+【分享】Hook Android C代码基础总结
+http://bbs.pediy.com/showthread.php?t=212943
+TaintART: A Practical Multi-level Information-Flow Tracking System for Android RunTime
+http://www.securitygossip.com/blog/2016/09/27/2016-09-27/
+BinProxy介绍
+http://www.mottoin.com/89877.html
+ShadowSocks协议的弱点分析和改进
+https://github.com/breakwa11/shadowsocks-rss/issues/38
+Linux Kernel 4.6.3 - Netfilter Privilege Escalation (Metasploit)
+https://www.exploit-db.com/exploits/40435/?rss
+【技术分享】CVE-2016-7401-Django CSRF防御绕过漏洞分析
+http://bobao.360.cn/learning/detail/3065.html
+Plug-In Contest 2016: Hall Of Fame（IDA获奖插件）
+https://www.hex-rays.com/contests/2016/index.shtml
+IDA的VMAttack插件
+https://github.com/anatolikalysch/VMAttack
+Python 3 学习笔记
+http://lovenight.github.io/2016/09/25/Python-3-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/
+揭秘 0.1 + 0.2 != 0.3
+http://www.barretlee.com/blog/2016/09/28/ieee754-operation-in-js/
+使用TpmInit.exe绕过UAC
+http://www.mottoin.com/89898.html
+通过滥用JS minifier实现一个javascript后门
+https://diracdeltas.github.io/blog/backdooring-js/
+【技术分享】Cookie-Form型CSRF防御机制的不足与反思
+http://bobao.360.cn/learning/detail/3069.html
+Imporving Efficiency of Dynamic Analysis With Dynamic Dependence Summaries
+http://www.securitygossip.com/blog/2016/09/28/2016-09-28/
+使用NETSHELL执行恶意DLLs实现主机持久化控制
+http://www.mottoin.com/89905.html
+MSSQL通过Agent Jobs实现命令执行
+http://www.mottoin.com/89870.html
+【原创】某直播平台协议分析之一
+http://bbs.pediy.com/showthread.php?t=212974
+【原创】嵌入式Linux内核安全防御技术和挑战
+http://bbs.pediy.com/showthread.php?t=212983
+【原创】献上Win PE文件格式解释源码
+http://bbs.pediy.com/showthread.php?t=212960
+ImageMagick identify "d:" hangs
+http://www.openwall.com/lists/oss-security/2016/09/28/13
+Web Worker 中的 importScripts 和 baseHref 同源策略绕过问题
+http://paper.seebug.org/57/
+simhash算法原理及实现
+http://yanyiwu.com/work/2014/01/30/simhash-shi-xian-xiang-jie.html
+Reverse Engineering challenges
+https://challenges.re/
+Reverse Engineering for Beginners
+https://beginners.re/RE4B-EN.pdf
+【技术分享】谈一谈如何在Python开发中拒绝SSRF漏洞
+http://bobao.360.cn/learning/detail/3074.html
+端口扫描原理及实现
+http://xiaix.me/duan-kou-sao-miao-yuan-li-ji-shi-xian/
+陷阱！python参数默认值
+http://python.jobbole.com/86543/
+Android漏洞CVE-2015-3825分析及exploit实战：从Crash到劫持PC
+http://www.ms509.com/?p=439
+Redis学习笔记
+http://sccsec.com/2016/10/02/redis%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/
+Git的核心概念
+https://lufficc.com/blog/the-core-conception-of-git
+【CTF攻略】最新2016 L-CTF writeup
+http://bobao.360.cn/ctf/detail/168.html
+ZeusVM analysis
+http://www.miasm.re/blog/2016/09/03/zeusvm_analysis.html
+Introduction to PDF syntax
+https://gendignoux.com/blog/2016/10/04/pdf-basics.html
+微信个人号/公众号相关项目整理 (wechat/weixin/wx)
+https://github.com/fritx/awesome-wechat
+A collection of Burpsuite Intruder payloads
+https://github.com/1N3/IntruderPayloads
+Securing Your Raspberry Pi
+http://www.madirish.net/566
+Kali Linux 秘籍 中文版
+https://wizardforcel.gitbooks.io/kali-linux-cookbook/content/
+WAF Testing With Random User Agents
+http://jerrygamblin.com/2016/10/05/waf-testing-with-random-user-agents/
+awesome-spider
+https://github.com/facert/awesome-spider
+Chardet：通用编码检测器
+http://hao.jobbole.com/chardet/
+Tomcat 服务本地提权漏洞预警
+http://mp.weixin.qq.com/s?__biz=MzIwMDk1MjMyMg==&mid=2247483675&idx=1&sn=4b3333c9a16e2e29c6fed72ad45e0787&mpshare=1&scene=2&srcid=1007lydwyCzkOlwg6aH218Wj&from=timeline&isappinstalled=0#wechat_redirect
+【技术分享】海康威视网络摄像机远程访问发现XXE漏洞
+http://bobao.360.cn/learning/detail/3080.html
+【技术分享】几张图让你理解：Tor是如何工作的
+http://bobao.360.cn/learning/detail/3081.html
+Architecture of x64dbg
+http://x64dbg.com/blog/2016/10/04/architecture-of-x64dbg.html
+最近一些网站泄露的数据库
+http://balockae.online/files/
+Django CSRF Bypass 漏洞分析(CVE-2016-7401)
+http://blog.knownsec.com/2016/10/django-csrf-bypass_cve-2016-7401/
+sudo-snooper - Python script to fool sudo users
+http://www.kitploit.com/2016/10/sudo-snooper-python-script-to-fool-sudo.html
+A Javascript journey with only six characters
+http://jazcash.com/a-javascript-journey-with-only-six-characters/
+CVE-2016-4977: RCE in Spring Security Oauth漏洞分析
+http://www.mottoin.com/90527.html
+Kentico CMS (< 9.0.42) SQLi
+https://xpnsec.tumblr.com/post/151837368691/kentico-cms-9042-sqli
+Flask最佳实践
+https://zhuanlan.zhihu.com/p/22774028
+Node.js Buffer knows everything.
+https://github.com/ChALkeR/notes/blob/master/Buffer-knows-everything.md
+PostScript语言安全研究（一）ImageMagick新漏洞分析
+http://drops.wiki/index.php/2016/10/15/postscript/
+squid 信息泄露漏洞
+http://www.sadk.org/%E6%97%A5%E5%BF%97/1840.html
+中文技术文档的写作规范
+https://github.com/ruanyf/document-style-guide
+Python 返回 [Errno 24] Too many open files
+http://t.tips/?action=show&id=23411
+Find Security Bugs: the open-source Java static analysis tool
+http://gosecure.net/2016/10/17/find-security-bugs-open-source-java-static-analysis-tool/
+【技术分享】利用硬件防御ROP：HA-CFI技术浅析
+http://bobao.360.cn/learning/detail/3105.html
+From PouchDB to RCE: a node.js injection vector
+https://medium.com/@micaksica/from-pouchdb-to-rce-a-node-js-injection-vector-ffd1d1dd2807#.9eqrbz11w
+Let’s talk about CFI: clang edition
+https://blog.trailofbits.com/2016/10/17/lets-talk-about-cfi-clang-edition/
+CVE-2016-6187: Exploiting Linux kernel heap off-by-one
+https://cyseclabs.com/blog/cve-2016-6187-heap-off-by-one-exploit
+Inference of Peak Density of Indirect Branches to Detect ROP Attacks
+http://www.securitygossip.com/blog/2016/10/18/2016-10-18/
+NSA方程式组织BANANAGLEE工具集分析
+http://blog.jowto.com/?p=180
+使用Spade Apk后门Hack任意Andorid手机
+http://www.mottoin.com/90613.html
+Android安全工程师-安全技能
+https://www.sec-wiki.com/skill/8
+【技术分享】深入挖掘EMET
+http://bobao.360.cn/learning/detail/3114.html
+【技术分享】浅谈ASLR和Shell代码的那些事儿
+http://bobao.360.cn/learning/detail/3111.html
+对称NAT穿透的一种新方法
+http://xdxd.love/2016/10/18/%E5%AF%B9%E7%A7%B0NAT%E7%A9%BF%E9%80%8F%E7%9A%84%E4%B8%80%E7%A7%8D%E6%96%B0%E6%96%B9%E6%B3%95/
+unicode同形字引起的安全问题
+http://xdxd.love/2016/10/17/unicode%E5%90%8C%E5%BD%A2%E5%AD%97%E5%BC%95%E8%B5%B7%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98/
+浏览器安全系列
+http://wiki.ioin.in/post/group/4aZ
+EXPLOITING  CORS    MISCONFIGURATIONS
+https://portswigger.net/knowledgebase/papers/ExploitingCORSMisconfigurations.pdf
+Decrypting Google Chrome Passwords on macOS / OS X
+http://bufferovernoah.com/2016/10/17/chrome/
+可以租赁的僵尸网络
+http://rootkiter.com/2016/10/17/%E5%8F%AF%E4%BB%A5%E7%A7%9F%E8%B5%81%E7%9A%84%E5%83%B5%E5%B0%B8%E7%BD%91%E7%BB%9C.html
+【技术分享】从一字节溢出到任意代码执行-Linux下堆漏洞利用
+http://bobao.360.cn/learning/detail/3113.html
+Securing the loading of dynamic code
+https://labs.mwrinfosecurity.com/blog/securing-the-loading-of-dynamic-code/
+Static Code Analysis for Smali files
+https://github.com/dorneanu/smalisca/
+由HITCON 2016一道web聊一聊php反序列化漏洞
+http://www.freebuf.com/vuls/116705.html
+python如何判断stdin里面是否有数据？
+http://www.sadk.org/%E6%97%A5%E5%BF%97/1841.html
+HeapSentry: Kernel-assisted Protection Against Heap Overows
+http://www.securitygossip.com/blog/2016/10/19/2016-10-19/
+老王带你搞定社交网络分析II——多维宇宙行动
+http://mp.weixin.qq.com/s?__biz=MzIxMjUyODM3OQ==&mid=2247483783&idx=1&sn=44099744a51a74aceb13a586309b33bb&chksm=9745fc13a0327505a5cc8578c63bf221dd95b83b79f5496b4ffdc7d93a9ac3930085f53b9fa2&mpshare=1&scene=2&srcid=1019rmd4yUYMuYa1ZbmgiWjh
+对Beescms SQL注入漏洞的进一步思考
+https://www.ohlinge.cn/php/beescms_login_sql.html
+子域名搜集思路与技巧梳理
+http://mp.weixin.qq.com/s?__biz=MzIxNDI0MDAxNg==&mid=2247483684&idx=1&sn=dbc58596968b2203262c6cc71d89795a&chksm=97abdf5ba0dc564d84a1ddbeaaef49f2aa905a227d616637d9cef5583552e88c2e46a5da9b37&mpshare=1&scene=1&srcid=1018QHnHkSDI89AyGz2ANyWE#rd
+BurpSuite插件分享：图形化重算sign和参数加解密插件
+http://www.mottoin.com/90666.html
+手把手教你如何从内存中提取出LastPass的用户凭证
+http://bobao.360.cn/learning/detail/3115.html
+Fixing Python Performance with Rust
+https://blog.sentry.io/2016/10/19/fixing-python-performance-with-rust.html
+Bypassing Intel's ASLR
+https://www.schneier.com/blog/archives/2016/10/bypassing_intel.html
+有趣的机器学习：最简明入门指南
+http://mp.weixin.qq.com/s?__biz=MzA4MjEyNTA5Mw==&mid=2652564243&idx=1&sn=3c700e51ef06462fb1aa8d4391374791&chksm=8464c359b3134a4f1557a6af0b8b9d9849f4ffc9e79e69fb593b8dae3617c4bae3da2553cf15&mpshare=1&scene=2&srcid=10205xn3FzkFcZzlKKEihavf&from=timeline&isappinstalled=0#rd
+使用 XML 内部实体绕过 Chrome 和 IE 的 XSS 过滤器
+http://paper.seebug.org/80/
+大量ZIO ROUTER路由器未授权访问
+http://t.tips/?action=show&id=23417
+代码审计就该这么来 Mlecms Getshell
+http://paper.seebug.org/79/
+代码审计就该这么来 - 2 Mlecms 注入
+http://paper.seebug.org/78/
+Use MSBuild To Do More（渗透中MSBuild的应用技巧）
+http://www.91ri.org/16436.html
+【漏洞预警】CVE-2016-5195脏牛漏洞：Linux内核通杀提权漏洞（10.21 9:10更新）
+http://bobao.360.cn/learning/detail/3123.html
+【技术分享】IoT安全系列-如何发现攻击面并进行测试
+http://bobao.360.cn/learning/detail/3112.html
+脏牛(Dirty COW)linux本地提权漏洞
+https://github.com/dirtycow/dirtycow.github.io
+实战代码审计某建站系统从Log泄露到Getshell
+http://bbs.ichunqiu.com/thread-7769-1-1.html?from=wiki
+L-CTF官方writeup
+http://wiki.ioin.in/post/group/OXW
+KNOXout - ​Bypassing Samsung KNOX
+https://media.wix.com/ugd/4e84e6_668d564cc447434a9a8fda3c13a63f6a.pdf
+AndroidLinker与SO加壳技术
+http://wiki.ioin.in/post/group/xqr
+跨域方法总结
+http://wps2015.org/2016/10/17/summary-of-cross-domain/
+理解python的metaclass(元类)
+https://segmentfault.com/a/1190000007255412
+An awesome list of high-quality open datasets in public domains
+https://github.com/caesar0301/awesome-public-datasets
+Mac OS X rootkit
+https://github.com/enzolovesbacon/inficere
+CSP的今世与未来
+http://www.freebuf.com/articles/web/116836.html
+Exploit generation and JavaScript analysis automation with WinDBG
+http://theevilbit.blogspot.hk/2016/10/exploit-generation-and-javascript.html
+关于 dyn / twitter 受攻击情况的说明和 mirai 僵尸网络的回顾
+http://blog.netlab.360.com/a-dyn-twitter-ddos-event-report-and-mirai-botnet-review/
+CVE-2016-5195:用于android测试的脏牛漏洞POC
+https://github.com/timwr/CVE-2016-5195
+【技术分享】检测本地文件躲避安全分析
+http://bobao.360.cn/learning/detail/3119.html
+Paypal 2FA Bypass
+https://henryhoggard.co.uk/blog/Paypal-2FA-Bypass
+介绍Python的魔术方法 - Magic Method
+https://segmentfault.com/a/1190000007256392
+crontab 不能正常运行的原因分析方法
+https://segmentfault.com/a/1190000007256442
+selenium webdriver 从入门到提高
+https://www.gitbook.com/book/easonhan007/selenium-webdriver/details
+【漏洞分析】CVE-2016-5195 DirtyC0w: Linux内核提权漏洞分析
+http://bobao.360.cn/learning/detail/3132.html
+Android逃逸技术汇编
+http://blogs.360.cn/360mobile/2016/10/24/android_escape/
+对15天的密码蜜罐的结果统计
+https://govolution.wordpress.com/2016/10/24/the-first-15-days-of-a-password-honeypot/
+[Android Tools] Jeb v2.2.7.201608151620 破解版
+http://www.mottoin.com/90921.html
+ssh-audit - SSH Server Auditing
+http://www.kitploit.com/2016/10/ssh-audit-ssh-server-auditing.html
+CVE-2016-8610: SSL死亡警告：OpenSSL SSL/TLS SSL3_AL_WARNING undefined alert Remote DoS
+http://seclists.org/oss-sec/2016/q4/224
+通杀所有系统的漏洞? - 聊一聊Drammer，Android上的RowHammer攻击
+http://weibo.com/ttarticle/p/show?id=2309404034511389214467
+跨域解决方案大全
+https://segmentfault.com/a/1190000007276212
+【技术分享】从白帽子角度谈Flash安全
+http://bobao.360.cn/learning/detail/3133.html
+通过DNS prefetching绕过CSP
+https://blog.compass-security.com/2016/10/bypassing-content-security-policy-with-dns-prefetching/
+CVE-2016-1240:基于Debian发行版的Tomcat本地提权漏洞
+http://legalhackers.com/advisories/Tomcat-DebPkgs-Root-Privilege-Escalation-Exploit-CVE-2016-1240.html
+收集的Windows, Linux 和 MySQL提权脚本
+https://github.com/1N3/PrivEsc
+微体系结构攻击KASRL
+https://cyber.wtf/2016/10/25/micro-architecture-attacks-on-kasrl/
+【漏洞预警】Joomla!存在创建账号/权限提升漏洞请及时更新
+http://bobao.360.cn/learning/detail/3139.html
+Flask、Django、Pyramid三个框架的对比
+http://python.jobbole.com/81396/
+模拟众测漏洞 write-up
+http://d0n9.me/2016/10/23/%E6%A8%A1%E6%8B%9F%E4%BC%97%E6%B5%8B%E6%BC%8F%E6%B4%9E-write-up/
+Metasploitable3 is a VM that is built from the ground up with a large amount of security vulnerabilities.
+https://github.com/rapid7/metasploitable3
+Dirty COW - (CVE-2016-5195) - Docker Container Escape
+https://blog.paranoidsoftware.com/dirty-cow-cve-2016-5195-docker-container-escape/
+XSS dynamic detection using PhantomJs
+http://www.n0tr00t.com/2016/10/29/XSS_dynamic_detection_using_PhantomJs.html
+LDAP as attack vector could power Terabit-Scale LDAP DDoS Attacks
+http://securityaffairs.co/wordpress/52841/cyber-crime/ldap-ddos.html
+[科普向] 解析create_function() && 复现wp
+http://paper.seebug.org/94/
+An open source XSS vulnerability scanner.
+https://github.com/lewangbtcc/anti-XSS
+Stack guard canary massaging
+http://seclists.org/oss-sec/2016/q4/286
+使用SElinux限制你的Go应用程序
+https://blog.fmpwizard.com/2016/10/01/restricting-your-go-application-with-selinux/
+除了KALI，还有一些其他的发行版本的LINUX可用于渗透
+https://codeandunicorns.com/popular-linux-distributions-hacking-penetration-testing-2016/
+Flask、Django、Pyramid三个框架的对比
+http://python.jobbole.com/81396/
+模拟众测漏洞 write-up
+http://d0n9.me/2016/10/23/%E6%A8%A1%E6%8B%9F%E4%BC%97%E6%B5%8B%E6%BC%8F%E6%B4%9E-write-up/
+Metasploitable3 is a VM that is built from the ground up with a large amount of security vulnerabilities.
+https://github.com/rapid7/metasploitable3
+Dirty COW - (CVE-2016-5195) - Docker Container Escape
+https://blog.paranoidsoftware.com/dirty-cow-cve-2016-5195-docker-container-escape/
+XSS dynamic detection using PhantomJs
+http://www.n0tr00t.com/2016/10/29/XSS_dynamic_detection_using_PhantomJs.html
+LDAP as attack vector could power Terabit-Scale LDAP DDoS Attacks
+http://securityaffairs.co/wordpress/52841/cyber-crime/ldap-ddos.html
+MySQL / MariaDB / PerconaDB - Privilege Escalation / Race Condition Exploit
+http://legalhackers.com/advisories/MySQL-MariaDB-PerconaDB-PrivEsc-Race-CVE-2016-6663-OCVE-2016-5616-Exploit.html
+http://seclists.org/fulldisclosure/2016/Nov/4
+Memcached 命令执行漏洞（CVE-2016-8704、CVE-2016-8705、CVE-2016-8706）
+http://paper.seebug.org/95/
+Zabbix 2.2 < 3.0.3 - API JSON-RPC Remote Code Execution
+https://www.exploit-db.com/exploits/39937/
+GATTacker - BLE (Bluetooth Low Energy) Man-in-the-Middle
+http://www.kitploit.com/2016/11/gattacker-ble-bluetooth-low-energy-man.html
+2016最流行的Linux发行版渗透测试系统
+http://www.mottoin.com/91202.html
+BurpSuitev1.7.08破解版下载
+http://www.waitalone.cn/burpsuite-v1-7-08.html
+whatportis:一款端口服务查询工具
+http://www.mottoin.com/91230.html
+沙盒－攻击面分析工具
+https://github.com/google/sandbox-attacksurface-analysis-tools
+What Cannot Be Read, Cannot Be Leveraged? Revisiting Assumptions of JIT-ROP Defences
+http://www.securitygossip.com/blog/2016/11/01/2016-11-01/
+Pwn A Camera Step by Step (Web ver.)
+http://paper.seebug.org/97/
+BadUSB小尝试
+http://www.mottoin.com/91187.html
+中国最大的Webshell后门箱子调查，所有公开大马全军覆没
+http://www.freebuf.com/news/topnews/118424.html
+分享一些无特征PHP一句话
+http://www.lengbaikai.net/2016/10/31/%E5%88%86%E4%BA%AB%E4%B8%80%E4%BA%9B%E6%97%A0%E7%89%B9%E5%BE%81php%E4%B8%80%E5%8F%A5%E8%AF%9D/
+MySQL / MariaDB / PerconaDB 权限提升漏洞（CVE-2016-6664）
+https://www.seebug.org/vuldb/ssvid-92513
+MySQL / MariaDB / PerconaDB - 提权/条件竞争漏洞(附POC)
+http://wiki.ioin.in/url/QvV
+[local] - Linux Kernel (Ubuntu / Fedora / Redhat) - 'Overlayfs' Privilege Escalation (Metasploit)
+https://www.exploit-db.com/exploits/40688/
+CVE request: XXE in perl Image::Info and XML::Twig
+http://seclists.org/oss-sec/2016/q4/301
+How to configure NFS Server and Client Configuration on Ubuntu 16.10 (Yakkety Yak)
+http://www.ubuntugeek.com/how-to-configure-nfs-server-and-client-configuration-on-ubuntu-16-10-yakkety-yak.html
+前端黑魔法：使用JS检测远程用户的杀毒软件
+http://www.mottoin.com/91264.html
+IoT: 物联网安全测试经验总结
+http://www.mottoin.com/91246.html
+Sensitive directory/file Integrity Monitoring and Checking - .Little Hann
+http://www.cnblogs.com/LittleHann/p/5957129.html
+三十分钟学会AWK
+https://segmentfault.com/a/1190000007338373
+逆向修改内核绕过反调试
+http://www.whitecell-club.org/?p=1442
+Apache设置反向代理解决js跨域问题
+https://segmentfault.com/a/1190000007352990
+Pyspider框架 —— Python爬虫实战之爬取 V2EX 网站帖子
+https://segmentfault.com/a/1190000007360307
+Sparkjava Framework - Arbitrary File Read Vulnerability
+http://seclists.org/fulldisclosure/2016/Nov/13
+深入理解Python中的ThreadLocal变量（下）
+http://selfboot.cn/2016/11/03/threadlocal_enhance/
+Exploiting WebKit on Vita 3.60
+http://paper.seebug.org/98/
+A curated list of static analysis tools
+https://github.com/mre/awesome-static-analysis#python
+ADB Usage Complete / ADB 用法大全
+https://github.com/mzlogin/awesome-adb
+如何搭建一个私人网盘
+https://segmentfault.com/a/1190000007360772
+【原创】CmsEasy前台无限制GetShell
+https://xianzhi.aliyun.com/forum/read/215.html
+逆向修改内核绕过反调试
+http://www.whitecell-club.org/?p=1442
+使用浏览器计算力，对抗密码破解
+https://www.cnblogs.com/index-html/p/client_pbkdf.html
+PHP漏洞跟踪报告
+http://blog.nsfocus.net/php-vulnerability-tracking-report/
+一段有趣的php登录验证逻辑
+http://www.mauu.me/?p=210
+unix-like reverse engineering framework and commandline tools
+https://github.com/radare/radare2
+【技术分享】多工具多用户的HTTP代理
+http://bobao.360.cn/learning/detail/3156.html
+gitlab的文件读取BUG导致的RCE漏洞
+https://hackerone.com/reports/178152
+RecuperaBit - A Tool For Forensic File System Reconstruction
+http://www.kitploit.com/2016/11/recuperabit-tool-for-forensic-file.html
+Radium-Keylogger - Python keylogger with multiple features
+http://www.kitploit.com/2016/11/radium-keylogger-python-keylogger-with.html
+Hadoop渗透及安全加固
+http://www.mottoin.com/91334.html
+ProxyBroker：开源代理抓取及验证程序
+https://github.com/constverum/ProxyBroker
+Appie：便携式Android渗透测试工具包
+https://manifestsecurity.com/appie/
+wifi渗透流程整理
+http://www.mottoin.com/91376.html
+海量数据去重——bloom filter算法的Python3实现
+https://gist.github.com/phith0n/00955296b121da307cc1691c779f9751
+Mirai源码中的SYN弱口令扫描
+http://rootkiter.com/2016/11/05/Mirai%E6%BA%90%E7%A0%81%E4%B8%AD%E7%9A%84SYN%E5%BC%B1%E5%8F%A3%E4%BB%A4%E6%89%AB%E6%8F%8F.html
+Ability to access all user authentication tokens, leads to RCE
+https://hackerone.com/reports/158330
+从PHP语法糖剖析Zend VM引擎
+http://www.yinqisen.cn/blog-723.html
+unsafe模式下的CSP Bypass
+http://bobao.360.cn/learning/detail/3154.html
+Securing PostgreSQL
+http://thebuild.com/presentations/pgconfeu-2016-securing-postgresql.pdf
+Java反序列化工具 — Java Deserialization Exp Tools
+https://www.webshell.cc/6238.html
+ZMap之坑
+http://evilcos.me/?p=557
+[UPDATE]号称影响10亿App的OAuth2.0使用缺陷
+http://evilcos.me/?p=561
+CTF常见php猥琐小段代码审计
+https://github.com/louchaooo/louchaooo.github.io/issues/20
+GMAIL帐号劫持漏洞
+http://www.mottoin.com/91406.html
+Tumblr XSS Exploit
+http://blog.andrewlang.net/post/152805939304/tumblr-xss-exploit
+sudoers的深入介绍与用户权限控制
+https://segmentfault.com/a/1190000007394449
+星外虚拟主机跨web目录文件读取技巧
+https://www.webshell.cc/6259.html
+jboss安全配置参考
+http://blog.csdn.net/qq_29277155/article/details/52810579
+【漏洞分析】GNU tar解压路径绕过漏洞分析（CVE-2016-6321）
+http://bobao.360.cn/learning/detail/3165.html
+novahot： 一个面向渗透测试人员的webshell开源框架
+https://github.com/chrisallenlane/novahot
+AVRop VM:一个基于ROP的M/o/Vfuscator虚拟机
+https://labs.mwrinfosecurity.com/blog/avrop/
+TypeSan: Practical Type Confusion Detection
+http://www.securitygossip.com/blog/2016/11/08/2016-11-08/
+经典内核漏洞调试笔记
+http://paper.seebug.org/102/
+知乎日志系统kids 开源
+https://zhuanlan.zhihu.com/p/19919584?refer=hackers
+Wukong 反作弊系统缓存的优化
+https://zhuanlan.zhihu.com/p/23509238
+打造免杀JScript
+http://www.mottoin.com/91459.html
+Mac OSX系统下的渗透利用工具Empyre
+http://www.freebuf.com/sectool/118715.html
+《JavaScript 闯关记》之 BOM
+https://segmentfault.com/a/1190000007410524
+Python装饰器的另类用法
+https://segmentfault.com/a/1190000007408026
+[local] - Linux Kernel 2.6.x < 2.6.7-rc3 - 'sys_chown()' Privilege Escalation
+https://www.exploit-db.com/exploits/40726/
+【表姐带你追女神： 送女生礼物の 三层境界】要开车了赶紧上车！】
+http://www.mottoin.com/91491.html
+Mobile Security Wiki
+https://mobilesecuritywiki.com/
+wifi渗透流程整理
+http://www.ohvirus.com/1.code/2016-10-19-wifi-safe-step.html
+第七季极客大挑战writeup
+http://blog.sycsec.com/?p=894
+Python安全编码之预防LDAP注入
+http://blog.nsfocus.net/preventing-ldap-injection-python-security-encoding/
+Joomla 3.4.4-3.6.3 Account Creation &Privilege Escalation测试记录
+https://3gstudent.github.io/3gstudent.github.io/Joomla-3.4.4-3.6.3-Account-Creation-&Privilege-Escalation%E6%B5%8B%E8%AF%95%E8%AE%B0%E5%BD%95/
+WAFNinja - Penetration testers favorite for WAF Bypassing
+http://www.kitploit.com/2016/11/wafninja-penetration-testers-favorite.html
+FOFA网络空间资产搜索引擎使用指南
+http://bobao.360.cn/learning/detail/3173.html
+【技术分享】利用Dirty Cow实现docker逃逸（附演示视频）
+http://bobao.360.cn/learning/detail/3168.html
+A new site for Safe Browsing
+http://security.googleblog.com/2016/11/a-new-site-for-safe-browsing.html
+geoip-attack-map - Cyber Security GeoIP Attack Map Visualisation
+http://www.kitploit.com/2016/11/geoip-attack-map-cyber-security-geoip.html
+Python keylogger with multiple features.
+https://github.com/mehulj94/Radium-Keylogger
+Hacking WebKit &Its JavaScript Engines
+https://secure.trifork.com/dl/qcon-newyork-2012/slides/jarredNicholls-hacking-webkit-and-js.pdf
+【技术分享】利用FILE结构执行任意代码
+http://bobao.360.cn/learning/detail/3167.html
+GitLab 任意文件读取漏洞 (CVE-2016-9086) 和任意用户 token 泄露漏洞
+http://paper.seebug.org/104/
+transparent_rop_detection_using_cpu_perfcounters.pdf
+http://101.96.10.63/engineering.nyu.edu/threads/sites/engineering.nyu.edu.threads/files/uploads/transparent_rop_detection_using_cpu_perfcounters.pdf
+TINC - 构建 IPv6 隧道及私有网络
+https://imlonghao.com/46.html
+Python代码安全审计系列
+http://wiki.ioin.in/post/group/dAN
+Python: 你不知道的 super
+https://segmentfault.com/a/1190000007426467
+Docker Compose 使用方法
+https://segmentfault.com/a/1190000007429156
+A list of (almost) all headless web browsers in existence
+https://github.com/dhamaniasad/HeadlessBrowsers
+hget - Rocket Fast, Interruptable, Resumable Download Accelerator
+http://www.kitploit.com/2016/11/hget-rocket-fast-interruptable.html
+Burp Suite插件开发之SQL注入检测（已开源）
+http://bobao.360.cn/learning/detail/3176.html
+F-Scrack(服务弱口令检测脚本)
+https://github.com/ysrc/F-Scrack
+Exploiting Python Code Injection in Web Applications
+http://sethsec.blogspot.jp/2016/11/exploiting-python-code-injection-in-web.html
+PENTEST-WIKI
+https://github.com/nixawk/pentest-wiki
+使用IMA扩展Linux可执行日志记录
+http://www.mottoin.com/91717.html
+Nathan：Android安全测试模拟器
+http://www.mottoin.com/91660.html
+利用服务端请求伪造（SSRF）攻击进入内网
+http://www.mottoin.com/91641.html
+DRAKVUF：黑盒二进制分析平台
+http://www.mottoin.com/91636.html
+练上一年再来总结的vim使用技巧
+https://segmentfault.com/a/1190000007446170
+技术分享|自制攻击欺骗防御系统
+http://mp.weixin.qq.com/s?__biz=MzI2NzI2OTExNA==&mid=2247483994&idx=1&sn=64fcc83146fb6c5ec9943e64f10306c7&chksm=ea8024cfddf7add9acb9f42110e43a31722f9e60881542de6e14957edce7e36e35524ce41a96#rd
+BLAKE2X: Unlimited Hashing
+https://cybermashup.com/2016/11/11/blake2x-unlimited-hashing/
+Unexpected behavior of cmd.exe while processing .bat files leads to potential command injection vulnerabilities
+http://seclists.org/fulldisclosure/2016/Nov/67
+fcn - 一键接入私有网络的工具
+https://github.com/boywhp/fcn/
+大公司都有哪些开源项目
+http://www.tuicool.com/wx/riMNraa?from=timeline&isappinstalled=0
+随机森林算法入门(python)
+https://segmentfault.com/a/1190000007463203
+Python: 陌生的 metaclass
+https://segmentfault.com/a/1190000007460181
+腾讯验证码的十二年
+https://zhuanlan.zhihu.com/p/23563375
+一些Django学习指南
+http://weibo.com/ttarticle/p/show?id=2309404041496792822800
+Python Security Auditing
+http://www.mottoin.com/91769.html
+滥用NPM库实现敏感数据提取
+http://www.mottoin.com/91795.html
+使用Commix绕过安全防护利用命令执行漏洞
+http://www.mottoin.com/91806.html
+聊聊越权那些事儿
+http://bobao.360.cn/learning/detail/3169.html
+渗透神器Nishang
+http://bobao.360.cn/learning/detail/3182.html
+熟练使用pdb，调试python程序
+https://medium.com/instamojo-matters/become-a-pdb-power-user-e3fc4e2774b2#.8s5098tfb
+滥用PHP 7的OPcache，派生SHELL
+https://github.com/Corb3nik/Talk-HackFest-OPcacheAbuse
+RtlDecompresBuffer 漏洞分析
+http://jolmos.blogspot.com/2016/11/rtldecompresbuffer-vulnerability.html
+CuckooDroid - Automated Android Malware Analysis with Cuckoo Sandbox
+http://www.kitploit.com/2016/11/cuckoodroid-automated-android-malware.html
+PsTools - Utilities for listing the processes running on remote computers, running processes remotely, rebooting computers, and more
+http://www.kitploit.com/2016/11/pstools-utilities-for-listing-processes.html
+needle - The iOS Security Testing Framework
+http://www.kitploit.com/2016/11/needle-ios-security-testing-framework.html
+实用工具：Layer 子域名挖掘机4.0 全新重构+175万大字典
+http://www.cnseay.com/4452/
+NoSQLAttack is an open source Python tool to automate exploit MongoDB
+https://github.com/youngyangyang04/NoSQLAttack
+编写高效且优雅的 Python 代码（1）
+https://segmentfault.com/a/1190000007458907
+gcc中 -pthread和 -lpthread的区别
+http://www.91ri.org/16514.html
+SQLi、权限提升和PowerShell Empire
+http://www.mottoin.com/91825.html
+一道有趣的CTF PWN题
+http://bobao.360.cn/learning/detail/3189.html
+从Nginx Access日志中挖掘有价值的漏洞
+http://mp.weixin.qq.com/s?__biz=MzI5ODE0ODA5MQ==&mid=2652277631&idx=1&sn=49f5aa92ba552df0aa43804c191a90fa
+Become a pdb power-user
+https://medium.com/instamojo-matters/become-a-pdb-power-user-e3fc4e2774b2#.hp3cc7xe8
+企业级入侵检测系统及实时告警的开源实现
+http://bobao.360.cn/learning/detail/3185.html
+中国再次发现来自海外的黑客攻击：蔓灵花攻击行动
+http://bobao.360.cn/news/detail/3747.html
+傲游浏览器漏洞系列（上）- 任意文件写入，UXSS
+http://paper.seebug.org/108/
+傲游浏览器漏洞系列（下）- 客户端SQL注入和代码执行
+http://paper.seebug.org/109/
+经典内核漏洞调试笔记之二
+http://paper.seebug.org/111/
+LeakedIn 数据泄露网站
+http://www.leakedin.com/
+Statistical Deobfuscation for Android
+http://www.apk-deguard.com/
+A Collection of Hacks in IoT Space
+https://github.com/nebgnahz/awesome-iot-hacks
+Open Source Intelligence Tools and Resources Handbook
+http://www.i-intelligence.eu/wp-content/uploads/2016/11/2016_November_Open-Source-Intelligence-Tools-and-Resources-Handbook.pdf
+Tools for auditing WAFS
+https://github.com/lightbulb-framework/lightbulb-framework
+京东Nginx平台化实践
+http://mp.weixin.qq.com/s?__biz=MzA3MzYwNjQ3NA==&mid=2651297317&idx=1&sn=ffc57671c8c55d257f8a6d0ad3b502b6&chksm=84ff4200b388cb1668925a6293736729d45d39339292a6536da8f59392a221cb219be5cd64fd&mpshare=1&scene=2&srcid=1115tAgLbSASsLPau5QnIxFW&from=timeline#rd
+Linux Kernel 4.4 (Ubuntu 16.04) - BPF Local Privilege Escalation (Metasploit)
+https://www.exploit-db.com/exploits/40759/
+CVE-2016-1247：Debian、ubuntu发行版的Nginx本地提权漏洞
+http://bobao.360.cn/learning/detail/3195.html
+在SQLite中实现命令执行
+https://www.invincealabs.com/blog/2016/11/sqlite-shell-script/
+绕过混合内容警告 - 在安全的页面加载不安全的内容
+http://paper.seebug.org/112/
+Evolution of the SSL and TLS protocols
+https://access.redhat.com/blogs/766093/posts/2758801
+Linux服务器文件删除策略
+https://segmentfault.com/a/1190000007505970
+Python 信号处理 signal 模块
+https://segmentfault.com/a/1190000007505471
+学习前端我推荐这5本书
+https://segmentfault.com/a/1190000007495224
+[译] MYSQL索引最佳实践
+https://segmentfault.com/a/1190000007494097
+Analysis of a Malware ROP Chain
+http://blog.opensecurityresearch.com/2013/10/analysis-of-malware-rop-chain.html
+使用IDA调试Android原生程序
+http://mp.weixin.qq.com/s?__biz=MjM5Mjc3MDM2Mw==&mid=2651132639&idx=1&sn=1de3a131bcfc4f8cc03718dbc51035dc&chksm=bd50828b8a270b9dd73cca2f3490161fcbe3d957878ecc0f3d749d79709dace801ea736b26f2&scene=4#wechat_redirect
+命令执行和绕过的一些小技巧
+http://bobao.360.cn/learning/detail/3192.html
+CVE-2016-5007 Spring Security / MVC Path Matching Inconsistency
+http://www.mottoin.com/92079.html
+Sparkjava Framework 文件遍历漏洞(CVE-2016-9177)分析与探究
+http://paper.seebug.org/115/
+VBulletin 核心插件 forumrunner SQL注入(CVE-2016-6195)漏洞分析
+http://paper.seebug.org/116/
+Python: 携带状态的闭包
+https://segmentfault.com/a/1190000007510013
+Linux C 线程池实现
+https://segmentfault.com/a/1190000007515396
+a tool to perform static analysis of known vulnerabilities in docker images/containers
+https://github.com/eliasgranderubio/check_docker_image
+dorothy2：开源的恶意软件/僵尸网络分析框架
+http://www.mottoin.com/92101.html
+使用Raspberry Pi Zero在锁定的计算机中安装后门
+http://www.mottoin.com/92104.html
+Janus: 盘古团队打造的移动应用安全分析社区化平台
+http://demo.appscan.io/web/search-rule.html#type=rule&page=1
+使用nmap和自定义子域名文件发现目标子域
+http://www.mottoin.com/92113.html
+OpenDoor：Owasp出品的开源目录扫描器
+http://www.mottoin.com/92193.html
+梁景祯，警察在找你！
+http://www.52pojie.cn/thread-555215-1-1.html
+Linux Kernel 4.4 (Ubuntu 16.04) - BPF Local Privilege Escalation (Metasploit)
+https://www.exploit-db.com/exploits/40759/
+HackingTeam back for your Androids, now extra insecure!
+http://rednaga.io/2016/11/14/hackingteam_back_for_your_androids/
+A Link to System Privilege - CVE-2016-0176 漏洞及利用详解
+http://paper.seebug.org/117/
+一个价值7500刀的CHROME UXSS（CVE-2016-1631）分析与利用
+http://www.mottoin.com/92324.html
+BurpSuite实战指南（七）
+http://www.mottoin.com/92259.html
+情报共享：谈何容易
+http://www.mottoin.com/92243.html
+Acunetix v11 - Web Application Security Testing Tool
+http://www.kitploit.com/2016/11/acunetix-v11-web-application-security.html
+Everything you need to know about pointers in C
+http://boredzo.org/pointers/
+Ida Pro 插件
+https://github.com/igogo-x86/HexRaysPyTools
+Powershell 渗透测试工具-Nishang（二）
+http://bobao.360.cn/learning/detail/3200.html
+Linux计划任务cron入门操作必看
+http://www.waitalone.cn/linux-crond.html
+基于centos6.8的Suricata+Barnyard2的IDS前端Snorby
+http://blog.csdn.net/qq_29277155/article/details/53205582
+国内各大CDN提供商IP地址段（略旧）
+http://www.cmsky.com/cn-cdn-ip
+Jupyter Notebooks for the Python Data Science Handbook
+https://github.com/jakevdp/PythonDataScienceHandbook
+PHP Trick 总结与探讨（一）
+http://www.freebuf.com/articles/rookie/119969.html
+CHM渗透：从入门到“入狱”
+http://www.freebuf.com/articles/system/119874.html
+From XSS to RCE 2.5 - Black Hat Europe Arsenal 2016
+https://github.com/Varbaek/xsser
+Qunar用户画像构建策略及应用实践
+http://mp.weixin.qq.com/s?__biz=MzA5NzkxMzg1Nw==&mid=2653161282&idx=1&sn=b1de3043ebc5fbdc3ee1e608174cf06d&chksm=8b493a2cbc3eb33a2de914c9b692c083516677c122162fc1e29469e3d503479f765ecf43be4a&mpshare=1&scene=1&srcid=1118Wr9QCtL8sRInNGHaSkKd#rd
+AndroidLinker与SO加壳技术之下篇
+http://yaq.qq.com/blog/15
+1-4题wp
+第5题
+第6题
+第7题
+第8题
+第9题
+一个价值7500刀的CHROME UXSS（CVE-2016-1631）分析与利用
+http://paper.seebug.org/118/
+Kali-Linux-2016.2(Rolling) 更新源
+https://www.ohlinge.cn/kali/rolling.html
+Price and Feature Comparison of Web Application Scanners
+http://sectoolmarket.com/price-and-feature-comparison-of-web-application-scanners-opensource-list.html
+PHP设计模式之迭代器模式
+https://segmentfault.com/a/1190000007547513
+一个简单的mips架构缓冲区溢出学习
+http://bbs.pediy.com/showthread.php?t=214104
+Winmail最新直达webshell 0day漏洞挖掘实录
+http://www.91ri.org/16519.html
+使用反序列化漏洞干掉你的JMS
+http://bobao.360.cn/learning/detail/3205.html
+deep-pwning - Metasploit for Machine Learning
+http://www.kitploit.com/2016/11/deep-pwning-metasploit-for-machine.html
+关于浏览器混合内容的安全性
+http://evilcos.me/?p=574
+The Misuse of Android Unix Domain Sockets and Security Implications
+http://www.securitygossip.com/blog/2016/11/22/2016-11-22/
+Hacking Aria2 RPC Daemon
+http://paper.seebug.org/120/
+挖掘PHP禁用函数绕过利用姿势
+http://blog.th3s3v3n.xyz/2016/11/20/web/%E6%8C%96%E6%8E%98PHP%E7%A6%81%E7%94%A8%E5%87%BD%E6%95%B0%E7%BB%95%E8%BF%87%E5%88%A9%E7%94%A8%E5%A7%BF%E5%8A%BF/
+Nginx 配置简述
+http://www.barretlee.com/blog/2016/11/19/nginx-configuration-start/
+SegmentFault 技术周刊 Vol.13 - Web 安全指南（下）
+https://segmentfault.com/a/1190000007564080
+一篇看完就把Vue.js融会贯通
+https://segmentfault.com/a/1190000007562611
+从零开始学Laravel
+https://segmentfault.com/blog/zhoujiping
+Jenkins 远程代码执行漏洞预警
+https://www.secpulse.com/archives/53270.html
+利用SQLite数据库文件实现任意代码执行
+http://www.freebuf.com/vuls/120213.html
+浏览器中一些好玩的洞(IE/Safari)
+https://xianzhi.aliyun.com/forum/read/359.html
+关于PHP内部编码与mysql字符差异问题的研究
+http://bobao.360.cn/learning/detail/3209.html
+Python Security Auditing (V): Runtime Code Analysis Tool
+https://www.cdxy.me/?p=750
+Linux系统中“动态库”和“静态库”那点事儿
+http://blog.jobbole.com/107977/
+Modern Static Analysis for .NET
+http://gosecure.net/2016/11/23/modern-static-analysis-net/
+Docker 实践（六）：容器监控
+https://segmentfault.com/a/1190000007568413
+《JavaScript 闯关记》之 DOM（下）
+https://segmentfault.com/a/1190000007566278
+mega.nz泄露的源码
+https://www.dropbox.com/sh/vk8sua9lbysx9wt/AADWdqYECe6wyDPJMAXunPmda
+反逆向工程——使恶意软件难以逆向的技术
+http://bobao.360.cn/learning/detail/3217.html
+Windows 10下的SEH+Pivots+ROP堆栈利用技术视频
+https://www.youtube.com/watch?v=J1Dt8pIe1RE
+Python Multiprocessing
+http://thief.one/2016/11/23/Python-multiprocessing/
+linux基础命令介绍八：文本分析 awk
+https://segmentfault.com/a/1190000007578521
+Python中的logging模块
+https://segmentfault.com/a/1190000007581128
+GNU Wget < 1.18 - Access List Bypass / Race Condition
+https://www.exploit-db.com/exploits/40824/
+[papers] - I Know Where Your Page Lives - De-randomizing the latest Windows 10 Kernel
+https://www.exploit-db.com/docs/40822.pdf
+Understanding ECMAScript 6
+https://leanpub.com/understandinges6/read
+Borrow cookies from your browser's authenticated session
+https://github.com/n8henrie/pycookiecheat
+一个网站图标引发的血案！绕过同源策略，判断你是否登录了某网站
+http://www.freebuf.com/vuls/120049.html
+使用Afl-fuzz (American Fuzzy Lop) 进行fuzzing测试（待续）
+http://blog.csdn.net/youkawa/article/details/45696317
+Red Hat JBoss EAP deserialization of untrusted data
+http://seclists.org/fulldisclosure/2016/Nov/143
+Java Deserialization Cheat Sheet
+http://paper.seebug.org/123/
+Abusing of Protocols to Load Local Files, bypass the HTML5 Sandbox, Open Popups and more
+http://www.brokenbrowser.com/abusing-of-protocols/
+IDA Python插件DriverBuddy脚本辅助逆向windows内核驱动
+https://github.com/nccgroup/DriverBuddy
+Python隐写工具
+https://github.com/fgrimme/Matroschka
+powershell代码混淆工具
+https://github.com/xor-function/fathomless/tree/master/ps-obfuscate
+溢出利用FILE结构体
+http://bobao.360.cn/learning/detail/3219.html
+JS魔法堂：深究JS异步编程模型
+https://segmentfault.com/a/1190000007624332
+Google XSS Game Writeup
+https://b1ngz.github.io/google-xss-game-writeup/
+DPAT：域密码审计工具
+http://www.mottoin.com/92787.html
+cURL审计报告公布
+http://www.mottoin.com/92790.html
+winmail  0day
+https://forum.90sec.org/forum.php?mod=viewthread&tid=10082
+Port 7547 SOAP Remote Code Execution Attack Against DSL Modems
+https://isc.sans.edu/diary/Port+7547+SOAP+Remote+Code+Execution+Attack+Against+DSL+Modems/21759
+php一句话后门过狗姿势万千
+http://wiki.ioin.in/post/group/WJ1
+Linux提权的4种方式
+http://bobao.360.cn/learning/detail/3230.html
+JSON-handle DomXSS Vulnerability (Ver 1.4.11 / 20160926)
+http://linux.im/2016/11/29/firefox-addon-JSON-handle-DomXSS.html
+当代 Web 的 JSON 劫持技巧
+http://paper.seebug.org/130/
+2016 HCTF Crypto 出题总结
+http://0x48.pw/2016/11/28/0x28/
+《JavaScript 闯关记》之事件
+https://segmentfault.com/a/1190000007629955#articleHeader0
+FlappyPig HCTF2016 Writeup
+http://bobao.360.cn/ctf/detail/179.html
+CSP进阶bypass
+http://wiki.ioin.in/post/group/AX4
+Three roads lead to Rome
+http://bobao.360.cn/learning/detail/3237.html
+滥用协议载入本地文件，绕过HTML5沙盒
+http://bobao.360.cn/learning/detail/3235.html
+HCTF 2016 CHALLENGES
+https://github.com/hduisa/HCTF2016
+assert免杀一句话
+http://mp.weixin.qq.com/s?__biz=MzA5ODA0NDE2MA==&mid=2649712881&idx=1&sn=8a980de7df522f6fa019fbb063381cef&chksm=888c589ebffbd188503d1ecb31b8c96bc62143e09feef2b2fb0d9654c159018a5fa1c45a0fe6&scene=0#rd
+高能慎入—技术干货PPT之微店安全沙龙第1期北京
+http://mp.weixin.qq.com/s?__biz=MzIzMjY3NzYwNA==&mid=2247483676&idx=1&sn=b38b3e9870717b13fdee9f8e96b4aca6&chksm=e8900897dfe7818143c1936256109262fdd7c4a0759a8d18527a38514c5ad3e5969fd791115c&mpshare=1&scene=1&srcid=1130nvZsugQ5Uu0q8Mm7DJod#rd
+WIFI安全之包结构解析
+http://sccsec.com/2016/11/23/WIFI%E5%AE%89%E5%85%A8%E4%B9%8B%E5%8C%85%E7%BB%93%E6%9E%84%E8%A7%A3%E6%9E%90/
+Firefox 0-day in the wild is being used to attack Tor users
+http://arstechnica.com/security/2016/11/firefox-0day-used-against-tor-users-almost-identical-to-one-fbi-used-in-2013/
+IE浏览器UAF漏洞CVE-2014-0282的分析与利用
+http://www.mottoin.com/92909.html
+DEX文件格式分析
+https://segmentfault.com/a/1190000007652937
+BrowserExploit：浏览器漏洞攻击利用框架
+http://www.mottoin.com/92925.html
+数据库集成下载（社工裤，社工库下载）
+http://www.shouyeren.org/blog/index.php/archives/335/
+A Software Approach to Defeating Side Channels in Last-Level Caches
+http://www.securitygossip.com/blog/2016/12/01/2016-11-29/
+一个目录穿越引发的注入及后续——XG SDK漏洞回顾与思考
+http://paper.seebug.org/132/
+实用工具：Layer子域名挖掘机4.2纪念版 增加功能
+http://www.cnseay.com/4482/
+subdomain discovery with nmap and custom subdomain files
+http://blog.x1622.com/2016/11/subdomain-discovery-with-nmap-and.html
+英国情报机GCHQ发布一款开源数据分析工具：Cyber​​Chef
+http://www.mottoin.com/92941.html
+docsify - 无需构建快速生成文档网站
+https://segmentfault.com/a/1190000007656679
+User space 与 Kernel space
+http://www.ruanyifeng.com/blog/2016/12/user_space_vs_kernel_space.html
+redirect Bypass CSP 目录限制
+http://bobao.360.cn/learning/detail/3245.html
+metinfo 未修复漏洞一枚
+http://www.cheery.win/?p=364
+Javascript exploit
+https://lists.torproject.org/pipermail/tor-talk/2016-November/042639.html
+搞事的NTP——CVE-2016-7434漏洞分析
+http://bobao.360.cn/learning/detail/3253.html
+[PRE]CSRF攻击-进击的巨人
+http://evilcos.me/?p=584
+Bypassing CSP using polyglot JPEGs
+http://paper.seebug.org/133/
+AZScanner
+https://github.com/az0ne/AZScanner
+Layer子域名挖掘机4.2纪念版
+http://www.cnseay.com/4482/
+【漏洞预警】Apache Tomcat远程代码执行漏洞(CVE-2016-8735)
+http://www.mottoin.com/93100.html
+【入门】玩转CSRF之挖洞实例分享
+http://bbs.ichunqiu.com/thread-16169-1-1.html
+Code Execution and Privilege Escalation – Databases
+http://resources.infosecinstitute.com/code-execution-and-privilege-escalation-databases/?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+infosecResources+%28InfoSec+Resources%29
+angr:基于python的二进制分析框架
+http://bobao.360.cn/learning/detail/3240.html
+Edge新增安全机制—MemGC
+http://www.arkteam.net/?p=1393
+Shellcode Compiler - 一款易用的 Shellcode 编译工具
+http://paper.seebug.org/134/
+brute discover GET and POST parameters
+https://github.com/mak-/parameth
+Introducing the RIPS analysis engine
+https://blog.ripstech.com/2016/introducing-the-rips-analysis-engine/
+正确使用 realloc()
+https://segmentfault.com/a/1190000007675747
+【独家连载】我的WafBypass之道（upload篇）
+https://xianzhi.aliyun.com/forum/read/458.html
+使用反射XSS配合form-action绕过CSP
+https://labs.detectify.com/2016/04/04/csp-bypassing-form-action-with-reflected-xss/
+SSH端口转发和隧道的使用
+http://www.10degres.net/port-forwarding-and-tunneling/
+Pwnhub Web题Classroom题解与分析
+https://www.leavesongs.com/PENETRATION/pwnhub-web-classroom-django-sql-injection.html
+通过反射型 XSS 绕过配合 form-action 绕过 CSP
+http://paper.seebug.org/135/
+Server-side request forgery detector
+https://github.com/JacobReynolds/ssrfDetector
+Analysis of the DAO exploit
+http://hackingdistributed.com/2016/06/18/analysis-of-the-dao-exploit/
+MySQL密码生成与反查
+http://www.mysql-password.com/
+Detecting Malware Pre-execution with Static Analysis and Machine Learning
+https://sentinelone.com/blogs/detecting-malware-pre-execution-static-analysis-machine-learning/
+BurpSuite 实战指南.pdf
+https://pan.baidu.com/s/1eS2w8z4
+渗透测试小技巧——DNSlog
+http://www.mottoin.com/93274.html
+CVE-2016-8655 Linux af_packet.c race condition (local root)
+http://seclists.org/oss-sec/2016/q4/607
+Firefox - SVG跨域cookie漏洞
+https://insert-script.blogspot.jp/2016/12/firefox-svg-cross-domain-cookie.html
+Microsoft PowerShell - XXE漏洞POC
+https://www.exploit-db.com/exploits/40873/
+[隨筆] Java Web 漏洞生態食物鏈
+http://blog.orange.tw/2016/12/java-web.html
+AndroidNative层文件解析漏洞挖掘指南
+http://yaq.qq.com/blog/18
+基于Ubuntu的BackBox Linux 4.7版本发布
+http://www.mottoin.com/93356.html
+[译]将PHP扩展从PHP5升级到NG(PHP7)
+https://segmentfault.com/a/1190000007727633
+APP漏洞扫描用地址空间随机化
+https://segmentfault.com/a/1190000007724984
+Firefox漏洞：借助SVG实现跨域设置Cookie
+http://www.mottoin.com/93337.html
+【技术分享】通过AWS、Google Cloud和Digital Ocean的DNS漏洞接管近12万域名
+http://bobao.360.cn/learning/detail/3268.html
+PHP 内核分析（1）：sapi_module_struct
+http://blog.jobbole.com/108631/
+A tool that can scan php vulnerabilities automatically using static analysis methods
+https://github.com/OneSourceCat/phpvulhunter
+扫目录过狗过waf方法
+https://www.webshell.cc/6274.html
+Windows API Hooking in Python - .Little Hann
+http://www.cnblogs.com/LittleHann/p/6133733.html
+[原]apache安全配置参考
+http://blog.csdn.net/qq_29277155/article/details/52915206
+(译)Python的隐藏特性(StackOverflow)
+http://pyzh.readthedocs.io/en/latest/python-hidden-features.html
+Teaching an Old Dog (not that new) Tricks. Stego in TCP/IP made easy (part-1)
+https://www.exploit-db.com/docs/40891.pdf
+OpenSSH 7.2 Denial Of Service
+https://cxsecurity.com/issue/WLB-2016120047
+利用 XML Signature 攻击绕过 SAML 2.0 单点登录
+http://www.mottoin.com/93405.html
+Dracnmap：基于Nmap的图形化网络信息搜集工具
+http://www.mottoin.com/93448.html
+PHP 7.1.0 Released
+http://php.net/archive/2016.php#id2016-12-01-3
+The pitfalls of postMessage
+https://labs.detectify.com/2016/12/08/the-pitfalls-of-postmessage/
+C++11 std::bind std::function 高级用法
+http://blog.jobbole.com/108695/
+C++11 新特性——auto 的使用
+http://blog.jobbole.com/108755/
+Linux 内核数据结构：位图（Bitmap）
+http://blog.jobbole.com/108527/
+C++ 的一大误区——深入解释直接初始化与复制初始化的区别
+http://blog.jobbole.com/108758/
+开始使用 VeryNginx
+https://imququ.com/post/use-verynginx.html
+RCE in JXBrowser JavaScript/Java bridge
+http://paper.seebug.org/139/
+FireAway：下一代防火墙Bypass工具
+http://www.mottoin.com/93473.html
+Cobalt Strike 3.6 – 提权之路
+http://www.mottoin.com/93482.html
+Burp Suite 官方文档中文版
+https://yw9381.gitbooks.io/burp_suite_doc_zh_cn/content/
+Webshells - Every Time the Same Purpose, Every Time a Different Story (Part 1)
+https://dfir.it/blog/2015/08/12/webshell-every-time-the-same-purpose/
+Webshells - Every Time the Same Story…(Part 2)
+https://dfir.it/blog/2016/01/18/webshells-every-time-the-same-story-dot-dot-dot-part2/
+Webshells - Every Time the Same Story…(Part 3)
+https://dfir.it/blog/2016/07/06/webshells-every-time-the-same-story-dot-dot-dot-part-3/
+Webshells: Rise of the Defenders (Part 4)
+https://dfir.it/blog/2016/12/07/webshells-rise-of-the-defenders-part-4/
+【翻译】一个mips栈溢出利用
+http://bbs.pediy.com/showthread.php?t=214500
+【原创】MS符号服务器CDN
+http://bbs.pediy.com/showthread.php?t=214515
+【技术分享】php webshell分析和绕过waf技巧
+http://bobao.360.cn/learning/detail/3271.html
+BurpSuite 实战指南（附下载地址）
+http://bobao.360.cn/learning/detail/3277.html
+JSCPWN
+http://drops.wiki/index.php/2016/12/10/jscpwn/
+初探 CSP Bypass
+https://xianzhi.aliyun.com/forum/read/523.html
+Wordpress functions.php 主题文件后门分析
+http://paper.seebug.org/140/
+CVE-2016-6771： Android语音信箱伪造漏洞分析
+http://paper.seebug.org/141/
+分析Linux/Mirai.B蠕虫
+http://www.mottoin.com/93625.html
+Exploit PHP’s mail() to get remote code execution
+https://www.saotn.org/exploit-phps-mail-get-remote-code-execution
+深入探析交互式扫描(IAST)技术
+http://cryin.startblog.cc/articles/article/30
+Art of Anti Detection – 1
+https://www.exploit-db.com/docs/40900.pdf
+在 PHP 中使用 Promise + co/yield 协程
+https://segmentfault.com/a/1190000007760513
+XSS Bypass Cookbook
+https://xianzhi.aliyun.com/forum/read/536.html
+内网安全（一）：从一封钓鱼邮件开始
+http://www.freebuf.com/articles/database/122591.html
+Teaching an Old Dog (not that new) Tricks. Stego in TCP/IP made easy (part-1)
+https://www.exploit-db.com/docs/40891.pdf
+【技术分享】如何分析经过混淆的SWF
+http://bobao.360.cn/learning/detail/3283.html
+【技术分享】在ie8中利用ROP与Heap Spray利用反弹shell
+http://bobao.360.cn/learning/detail/3282.html
+Exotic HTTP Headers
+https://peteris.rocks/blog/exotic-http-headers/
+Who Allocated My Memory? Detecting Custom Memory Allocators in C Binaries
+http://www.securitygossip.com/blog/2016/12/13/2016-12-13/
+基于Web漏洞扫描的URL及网页框架聚类研究
+http://cryin.startblog.cc/Articles/article/37
+Chrome出了个小bug：论如何在Chrome下劫持原生只读对象
+https://segmentfault.com/a/1190000007786629
+密码管理软件 Teampass 存在未授权 SQL 注入漏洞
+http://www.mottoin.com/93751.html
+雅虎邮箱存储型XSS漏洞，黑客能看任何人的邮件
+http://www.freebuf.com/vuls/122455.html
+XSS Bypass Cookbook
+https://xianzhi.aliyun.com/forum/read/536.html
+Linux 应用权限不当可提权系列漏洞分析
+http://www.mottoin.com/93843.html
+UXSS on Microsoft Edge – Adventures in a Domainless World
+https://www.brokenbrowser.com/uxss-edge-domainless-world/
+Nginx 配置简述
+http://www.barretlee.com/blog/2016/11/19/nginx-configuration-start/
+NTPD拒绝服务漏洞（CVE-2016-7434） 分析
+http://paper.seebug.org/144/
+NETGEAR 系列路由器命令执行漏洞简析
+http://paper.seebug.org/145/
+Pythonic code review
+https://access.redhat.com/blogs/766093/posts/2802001
+Microsoft Word OneTableDocumentStream 整数下溢漏洞分析（CVE-2016-7290）
+http://www.mottoin.com/93865.html
+漏洞预警：Joomla extension DT Register存在 SQL 注入漏洞
+http://www.mottoin.com/93862.html
+Web Storage实用指南
+https://segmentfault.com/a/1190000007811307
+【技术分享】借助DynELF实现无libc的漏洞利用小结
+http://bobao.360.cn/learning/detail/3298.html
+【技术分享】unsorted bin attack分析
+http://bobao.360.cn/learning/detail/3296.html
+UXSS on Microsoft Edge – Adventures in a Domainless World
+http://paper.seebug.org/143/
+Nagios Core 代码执行漏洞（CVE-2016-9565）分析
+http://paper.seebug.org/146/
+ASERT-Threat-Intelligence-Report-2016-06-Ransomware-Server-Analysis
+https://www.arbornetworks.com/blog/asert/wp-content/uploads/2016/12/ASERT-Threat-Intelligence-Report-2016-06-Ransomware-Server-Analysis.pdf
+手把手教你DIY一个DNS/HTTP带外查询工具
+http://das.scusec.org/2016/09/13/dns-http-search/
+[Web安全]浅谈json参数解析对waf绕过的影响
+https://xianzhi.aliyun.com/forum/read/553.html
+Statistical Deobfuscation of Android Applications
+http://www.securitygossip.com/blog/2016/12/16/2016-12-16/
+Offensiveinterview - 网络安全面试问题收集项目
+https://github.com/WebBreacher/offensiveinterview
+三十分钟学会SED
+https://segmentfault.com/a/1190000007843652
+A New Tool to Detect Known Malware from Memory Images – impfuzzy for Volatility –
+http://blog.jpcert.or.jp/2016/12/a-new-tool-to-d-d6bc.html
+富文本存储型XSS的模糊测试之道
+https://github.com/martinzhou2015/Paper/blob/master/%E5%AF%8C%E6%96%87%E6%9C%AC%E5%AD%98%E5%82%A8%E5%9E%8BXSS%E7%9A%84%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95%E4%B9%8B%E9%81%93.pdf
+PHP垃圾回收机制UAF漏洞分析
+http://www.freebuf.com/vuls/122938.html
+postMessage XSS on a million sites
+https://labs.detectify.com/2016/12/15/postmessage-xss-on-a-million-sites/
+滥用npm库导致数据暗渡
+http://bobao.360.cn/learning/detail/3309.html
+Ubuntu崩溃报告工具存在远程代码执行漏洞
+http://bobao.360.cn/learning/detail/3305.html
+样本逆向中系统调用的识别方法
+http://paper.seebug.org/148/
+巡风是一款适用于企业内网的漏洞快速应急、巡航扫描系统
+https://github.com/ysrc/xunfeng
+Nginx安全配置参考
+http://blog.csdn.net/qq_29277155/article/details/52819635
+当代 Web 的 JSON 劫持技巧
+http://www.91ri.org/16542.html
+BurpSuite插件分享：基于Python的Web应用Fuzzing插件PyJFuzz
+http://www.mottoin.com/94302.html
+用树莓派搭建小型honeynet
+http://www.mottoin.com/94306.html
+Safari Plugins-View-Page Stored XSS Vulnerabilities
+http://xisigr.com/x/safari-plugins-view-page-stored-xss-vulnerabilities/
+基于文件特征的Android模拟器检测（附实现代码下载）
+https://mp.weixin.qq.com/s/sl33d2pnyLMJ-fUY_DfBDw
+逆向工具综述（上）
+http://bobao.360.cn/learning/detail/3303.html
+逆向工具综述（下）
+http://bobao.360.cn/learning/detail/3307.html
+Project Wycheproof
+https://security.googleblog.com/2016/12/project-wycheproof.html
+美丽联合集团安全应急响应中心(MLSRC)正式上线
+http://www.mottoin.com/94319.html
+MongoDB安全 – PHP注入攻击
+http://www.mottoin.com/94341.html
+Tengine WAF 实践
+http://www.mottoin.com/94365.html
+GoogleSSLdomainFinder：基于谷歌SSL透明证书的子域名查询脚本
+http://www.mottoin.com/94409.html
+爬取知乎60万用户信息之后的简单分析
+https://segmentfault.com/a/1190000007869770
+使用Innodb存储引擎的mysql数据库恢复
+http://bobao.360.cn/learning/detail/3316.html
+CVE-2016-7054：OpenSSl 1.1.0a 、1.1.0b堆溢出漏洞利用
+http://bobao.360.cn/learning/detail/3315.html
+Joomla 权限提升漏洞（CVE-2016-9838）分析
+http://paper.seebug.org/152/
+使用Hashcat破解外国字符构成的密码的终极指南
+http://drops.wiki/index.php/2016/12/21/hashcat/
+A collection of JavaScript engine CVEs with PoCs
+https://github.com/tunz/js-vuln-db
+使用docker搭建开发环境
+https://segmentfault.com/a/1190000007875949
+在application/json,application/javascript等Response下进行XSS
+http://www.91ri.org/16545.html
+thinksns(Arbitrary file upload)
+http://www.91ri.org/16550.html
+Dnsteal：一个利用DNS请求传输文件的工具
+http://www.mottoin.com/94437.html
+Bottle HTTP 头注入漏洞探究
+https://www.leavesongs.com/PENETRATION/bottle-crlf-cve-2016-9964.html
+WeCenter 3.1.9 Stored XSS Vulnerability
+http://linux.im/2016/12/22/WeCenter-319-Stored-XSS-Vuln.html
+词法分析器的实现
+http://www.cnblogs.com/yanlingyin/archive/2012/04/17/2451717.html
+Google Chrome Privilege Escalation
+https://cxsecurity.com/issue/WLB-2016120130
+MHP语言开发札记
+http://www.math1as.com/index.php/archives/372/
+rootkit基础：从SYSCALL 到 HOOK
+https://d0hnuts.com/2016/12/21/basics-of-making-a-rootkit-from-syscall-to-hook/
+backdoor-apk - shell script that simplifies the process of adding a backdoor to any Android APK file
+http://www.kitploit.com/2016/12/backdoor-apk-shell-script-that.html
+【技术分享】一种新型的XSSI攻击向量
+http://bobao.360.cn/learning/detail/3333.html
+【技巧分享】技术流花式“破解”支付宝AR红包，更多技巧征集中
+http://bobao.360.cn/learning/detail/3336.html
+Embedded Prank: Christmas Spirit Injection for your VoIP Phone
+http://gosecure.net/2016/12/23/embedded-prank-christmas-spirit-injection-for-your-voip-phone/
+115 Browser 7.2.5 RCE Vulnerability
+http://linux.im/2016/12/26/115Browser-725-rce-vuln.html
+115 Browser 7.2.5 RCE Vulnerability
+http://paper.seebug.org/156/
+Docker网络隔离初步设想
+http://vipdocker.com/2016/09/14/docker-network-isolation/
+Unrestricted File Upload Testing
+https://www.aptive.co.uk/blog/unrestricted-file-upload-testing/
+谈谈HSTS超级Cookie
+http://blog.csdn.net/u011721501/article/details/53849064
+[remote] - OpenSSH < 7.4 - agent Protocol Arbitrary Library Loading
+https://www.exploit-db.com/exploits/40963/?rss
+[local] - OpenSSH < 7.4 - 'UsePrivilegeSeparation Disabled' Forwarded Unix Domain Sockets Privilege Escalation
+https://www.exploit-db.com/exploits/40962/?rss
+A curated list of awesome Windows Exploitation resources
+https://github.com/enddo/awesome-windows-exploitation
+【技术分享】基于Chakra JIT的CFG绕过技术
+http://bobao.360.cn/learning/detail/3335.html
+PHPMailer < 5.2.18 Remote Code Execution [CVE-2016-10033]
+http://seclists.org/fulldisclosure/2016/Dec/78
+黑云压城城欲摧 - 2016年iOS公开可利用漏洞总结
+http://paper.seebug.org/159/
+分享插件AddThis导致的DOM XSS
+http://paper.seebug.org/157/
+關於 Javascript {} + {}
+https://segmentfault.com/a/1190000007929295
+Python并发编程之线程池/进程池
+https://segmentfault.com/a/1190000007926055
+Rails SQL Injection
+https://rails-sqli.org/
+Swords and Shields – a Study of Mobile Game Hacks and Existing Defenses
+http://www.securitygossip.com/blog/2016/12/29/2016-12-29/
+JSM Bypass via createClassLoader
+http://paper.seebug.org/168/
+Be Careful with Python's New-Style String Format
+http://lucumr.pocoo.org/2016/12/29/careful-with-str-format/
+[webapps] - Zend Framework / zend-mail < 2.4.11 - Remote Code Execution
+https://www.exploit-db.com/exploits/40979/?rss
+基于taskmgr的应用层进程隐藏技术
+http://www.mottoin.com/94800.html
+格式化字符串漏洞实验
+https://github.com/shiyanlou/seedlab/blob/master/formatstring.md
+PHP htaccess injection cheat sheet
+https://github.com/sektioneins/pcc/wiki/PHP-htaccess-injection-cheat-sheet
+Linux MySQL Udf 提权
+http://www.91ri.org/16540.html
+Powershell tricks::Hide Process by kd.exe
+http://www.mottoin.com/94910.html
+Apache mod_session_crypto模块中的Padding Oracle漏洞分析
+http://bobao.360.cn/learning/detail/3365.html
+快捷方式：一种钓鱼攻击的新姿势
+http://bobao.360.cn/learning/detail/3366.html
+mitmAP - Simple Tool to Create a Fake AP and Sniff Data
+http://www.kitploit.com/2017/01/mitmap-simple-tool-to-create-fake-ap.html
+awesome-threat-intelligence
+http://www.mottoin.com/94947.html
+DOOM：分布式任务分发IP端口漏洞扫描器
+http://www.mottoin.com/94946.html
+DSCRETE: Automatic Rendering of Forensic Information From Memory Images via Application Logic Reuse
+http://www.securitygossip.com/blog/2017/01/03/2017-01-03/
+Really, POSIX? Really? memset() isn't async-signal-safe?
+http://boston.conman.org/2016/12/17.1
+WEB2PY 反序列化的安全問題－CVE-2016-3957
+http://devco.re/blog/2017/01/03/web2py-unserialize-code-execution-CVE-2016-3957/
+PentesterLab 的 Padding Oracle 漏洞靶机测试
+http://www.mottoin.com/94991.html
+Invoke-TheHash：执行WMI和SMB命令的PowerShell脚本
+http://www.mottoin.com/94990.html
+日请求过亿的Web系统PHP7升级实践
+http://geek.csdn.net/news/detail/77849
+Automated All-in-One OS Command Injection and Exploitation Tool.
+http://www.commixproject.com/
